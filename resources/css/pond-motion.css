@@ -1,0 +1,410 @@
+/* Hero pond, balls on the lawn and scroll reveals on the public website */
+
+/* ── Hero: golf balls floating on a real golf course pond ───────────────── */
+.ln-stage {
+    position: relative;
+    width: min(100%, 1080px);
+    aspect-ratio: 1075 / 460;
+    overflow: hidden;
+    border-radius: 28px;
+    isolation: isolate;
+    background: #0b3f96;
+    box-shadow: 0 18px 44px #00296526
+}
+
+/* The client's artwork, with only the water and sun moving. */
+.ln-stage-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block
+}
+
+.ln-stage-sun {
+    position: absolute;
+    left: 50%;
+    top: 26%;
+    width: 42%;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, #fff2b866 0, #ffd76a33 28%, transparent 62%);
+    mix-blend-mode: screen;
+    pointer-events: none;
+    animation: ln-sun-glow 7s ease-in-out infinite
+}
+
+@keyframes ln-sun-glow {
+
+    0%,
+    100% {
+        opacity: .45;
+        scale: .96
+    }
+
+    50% {
+        opacity: 1;
+        scale: 1.04
+    }
+}
+
+/* Light moving across the water, strongest in the sun's reflection. */
+.ln-stage-shimmer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 34%;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    -webkit-mask-image: radial-gradient(ellipse 62% 90% at 50% 18%, #000 0, #0009 45%, #0000 100%);
+    mask-image: radial-gradient(ellipse 62% 90% at 50% 18%, #000 0, #0009 45%, #0000 100%)
+}
+
+.ln-stage-shimmer::before {
+    content: '';
+    position: absolute;
+    inset: -30% -10%;
+    background: repeating-linear-gradient(176deg, #ffffff00 0 9px, #ffe9b52e 11px, #ffffff00 14px 23px, #bfe6ff24 25px, #ffffff00 29px 38px);
+    animation: ln-water-drift 9s ease-in-out infinite alternate
+}
+
+@keyframes ln-water-drift {
+    from {
+        transform: translate3d(-1.5%, -4px, 0)
+    }
+
+    to {
+        transform: translate3d(1.5%, 8px, 0)
+    }
+}
+
+/* A soft ring leaving each ball, matching the rings painted in the artwork. */
+.ln-stage-ripple {
+    position: absolute;
+    aspect-ratio: 7.5;
+    transform: translate(-50%, -50%);
+    border: 2px solid #ffffffb3;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: ln-ring-out 6.5s ease-out infinite
+}
+
+@keyframes ln-ring-out {
+    0% {
+        opacity: 0;
+        scale: .82
+    }
+
+    18% {
+        opacity: .7
+    }
+
+    100% {
+        opacity: 0;
+        scale: 1.34
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .ln-stage-sun,
+    .ln-stage-shimmer::before,
+    .ln-stage-ripple {
+        animation: none
+    }
+
+    .ln-stage-ripple {
+        display: none
+    }
+}
+
+@media (max-width: 600px) {
+    .ln-stage-ripple {
+        border-width: 1px
+    }
+}
+
+/* ── Balls resting on the grass beside the Join and Explore buttons ──────── */
+.ln-cta-panel {
+    position: relative;
+    overflow: hidden
+}
+
+.ln-lawn {
+    position: absolute;
+    inset: 0;
+    pointer-events: none
+}
+
+.ln-lawn img {
+    position: absolute;
+    bottom: 26%;
+    filter: drop-shadow(0 12px 8px #00140ab3)
+}
+
+.ln-lawn img:nth-child(2),
+.ln-lawn img:nth-child(5) {
+    bottom: 12%
+}
+
+.ln-lawn img:nth-child(3),
+.ln-lawn img:nth-child(4) {
+    bottom: 36%
+}
+
+@media (max-width: 1180px) {
+    .ln-lawn {
+        display: none
+    }
+}
+
+/* ── Scroll reveals ─────────────────────────────────────────────────────── */
+.ln-reveal {
+    opacity: 0;
+    translate: 0 22px;
+    transition: opacity .6s ease, translate .6s cubic-bezier(.2, .7, .2, 1)
+}
+
+.ln-reveal.is-revealed {
+    opacity: 1;
+    translate: 0 0
+}
+
+.ln-tile:nth-child(3n+2).ln-reveal {
+    transition-delay: .08s
+}
+
+.ln-tile:nth-child(3n).ln-reveal {
+    transition-delay: .16s
+}
+
+.ln-way:nth-child(even).ln-reveal {
+    transition-delay: .08s
+}
+
+/* ── Balls that respond ─────────────────────────────────────────────────── */
+.ln-tile img,
+.ln-step img,
+.ln-way>img {
+    transition: scale .35s cubic-bezier(.3, 1.6, .5, 1)
+}
+
+.ln-tile:hover img,
+.ln-step:hover img,
+.ln-way:hover>img {
+    scale: 1.09;
+}
+
+.ln-tile img {
+    animation: ln-bob 4.2s ease-in-out infinite
+}
+
+.ln-tile:nth-child(2) img {
+    animation-delay: -.7s
+}
+
+.ln-tile:nth-child(3) img {
+    animation-delay: -1.4s
+}
+
+.ln-tile:nth-child(4) img {
+    animation-delay: -2.1s
+}
+
+.ln-tile:nth-child(5) img {
+    animation-delay: -2.8s
+}
+
+.ln-tile:nth-child(6) img {
+    animation-delay: -3.5s
+}
+
+@keyframes ln-bob {
+
+    0%,
+    100% {
+        translate: 0 0
+    }
+
+    50% {
+        translate: 0 -6px
+    }
+}
+
+.ln-step,
+.ln-way {
+    transition: transform .2s ease, box-shadow .2s ease
+}
+
+.ln-step:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px #00296514
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .ln-tile img {
+        animation: none
+    }
+
+    .ln-tile img,
+    .ln-step img,
+    .ln-way>img,
+    .ln-step,
+    .ln-way {
+        transition: none
+    }
+
+    .ln-tile:hover img,
+    .ln-step:hover img,
+    .ln-way:hover>img {
+        scale: 1;
+    }
+
+    .ln-step:hover {
+        transform: none
+    }
+}
+
+@media (max-width: 600px) {
+    .ln-stage {
+        border-radius: 18px
+    }
+
+    .ln-stage-hint {
+        bottom: 8px;
+        padding: 4px 11px;
+        font-size: 11px
+    }
+}
+
+/* ── Golf course pond: the six ways and the call to action share one scene ── */
+.ln-course {
+    background: #1d2f24 url('../../public/askupon/pond-reeds-sunset.jpg') center 60% / cover no-repeat
+}
+
+.ln-page .ln-ways,
+.ln-page .ln-cta-panel {
+    background: none
+}
+
+.ln-page .ln-ways {
+    padding: 72px 20px 28px
+}
+
+.ln-page .ln-ways-card {
+    background: #03224f99;
+    border-color: #ffffff38;
+    box-shadow: 0 24px 60px #00143a59;
+    backdrop-filter: blur(3px) saturate(1.1)
+}
+
+.ln-page .ln-way strong,
+.ln-page .ln-way p {
+    text-shadow: 0 1px 4px #00143acc
+}
+
+.ln-page .ln-way p {
+    color: #eef5fd
+}
+
+.ln-page .ln-cta-panel {
+    padding: 26px 20px 96px
+}
+
+.ln-cta-actions {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    width: 100%
+}
+
+.ln-cta-actions .ln-btn {
+    min-width: 270px;
+    justify-content: center
+}
+
+.ln-page .ln-btn-join {
+    box-shadow: 0 14px 30px #00143a59
+}
+
+.ln-page .ln-cta-actions .ln-btn-explore {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: #0041a7;
+    box-shadow: 0 14px 30px #00143a40
+}
+
+@media (max-width: 700px) {
+    .ln-course {
+        background-position: 55% bottom
+    }
+
+    .ln-page .ln-ways {
+        padding: 40px 14px 18px
+    }
+
+    .ln-page .ln-cta-panel {
+        padding: 16px 20px 56px
+    }
+
+    .ln-cta-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 8px
+    }
+
+    .ln-cta-actions .ln-btn {
+        width: auto;
+        min-width: 0;
+        min-height: 34px;
+        font-size: 13px;
+        padding: 8px 14px
+    }
+
+    .ln-cta-actions .ln-btn svg {
+        width: 14px;
+        height: 14px
+    }
+}
+
+/* A phone has no room beside the buttons, so the drifting balls would only hide behind them. */
+@media (max-width: 700px) {
+
+    .ln-page .ln-cta-panel {
+        padding-bottom: 56px
+    }
+}
+
+/* ── Sunset section: real golf course photo (Andrew Shelley, Pexels) ───────── */
+.ln-page .ln-sunset {
+    background:
+        linear-gradient(180deg, #00244673 0%, #00244626 24%, #0024460d 50%, #00244659 78%, #002446b8 100%),
+        #002446 url('../../public/askupon/golf-course-sunset.jpg') center / cover no-repeat
+}
+
+.ln-page .ln-sunset-tag,
+.ln-page .ln-wordmark span {
+    text-shadow: 0 2px 14px #002446b3
+}
+
+@media (max-width: 700px) {
+    .ln-page .ln-sunset {
+        background-position: center, 62% center
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .ln-tile img {
+        animation: none
+    }
+}
