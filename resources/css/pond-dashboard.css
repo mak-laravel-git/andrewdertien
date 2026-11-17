@@ -112,6 +112,7 @@
 
 /* ── Tables ─────────────────────────────────────────────────────────────── */
 .pd-table-wrap {
+    position: relative;
     overflow-x: auto
 }
 
@@ -1303,5 +1304,95 @@
 
     .pond-mode-short {
         display: inline
+    }
+}
+
+/* ── Payments: export button, custom date range and the details dialog ──── */
+.pd-export {
+    margin-left: auto;
+    white-space: nowrap
+}
+
+.pd-date-range {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+    margin: -4px 0 16px;
+    color: var(--qp-purple)
+}
+
+.pd-date-range label {
+    display: grid;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5b5476
+}
+
+.pd-date-range .pond-input {
+    margin-top: 0;
+    min-width: 160px;
+    font-size: 13px
+}
+
+.pd-actions .pd-btn-small + .pd-btn-small {
+    margin-left: 8px
+}
+
+.pd-detail-list {
+    display: grid;
+    gap: 0;
+    margin: 18px 0 0
+}
+
+.pd-detail-list > div {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 12px;
+    padding: 11px 0;
+    border-top: 1px solid rgba(91, 84, 118, .12)
+}
+
+.pd-detail-list dt {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #7a7396
+}
+
+.pd-detail-list dd {
+    margin: 0;
+    font-weight: 600;
+    word-break: break-word
+}
+
+.pd-detail-list dd small {
+    display: block;
+    font-weight: 400;
+    color: #7a7396
+}
+
+@media (max-width: 700px) {
+    .pd-actions {
+        display: grid;
+        gap: 6px;
+        justify-items: stretch
+    }
+
+    .pd-actions .pd-btn-small + .pd-btn-small {
+        margin-left: 0
+    }
+
+    .pd-export {
+        flex: 1 1 100%;
+        margin-left: 0;
+        justify-content: center
+    }
+
+    .pd-detail-list > div {
+        grid-template-columns: 1fr;
+        gap: 2px
     }
 }

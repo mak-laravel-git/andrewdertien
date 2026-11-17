@@ -133,6 +133,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::controller(AdminPaymentController::class)->group(function () {
             Route::get('payments', 'index')->name('payments.index')
                 ->middleware('permission:'.PermissionEnum::PAYMENTS_INDEX->value);
+            Route::get('payments/export', 'export')->name('payments.export')
+                ->middleware('permission:'.PermissionEnum::PAYMENTS_INDEX->value);
             Route::post('payments/{purchase}/refund', 'refund')->name('payments.refund')
                 ->middleware('permission:'.PermissionEnum::PAYMENTS_REFUND->value);
         });

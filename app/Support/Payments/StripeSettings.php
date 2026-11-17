@@ -75,11 +75,20 @@ class StripeSettings
     }
 
     /**
-     * Whether everything needed to take payments and hear back from Stripe is present.
+     * Whether a recognised secret key is present. A purchase is confirmed when
+     * the buyer returns from Stripe, so the webhook is a safety net, not a must.
      */
     public function isConfigured(): bool
     {
-        return $this->mode() !== null && filled($this->webhookSecret());
+        return $this->mode() !== null;
+    }
+
+    /**
+     * Whether Stripe can also confirm payments in the background through the webhook.
+     */
+    public function hasWebhook(): bool
+    {
+        return filled($this->webhookSecret());
     }
 
     /**

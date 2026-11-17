@@ -291,3 +291,82 @@ test('an admin can search and filter every payment', function () {
         ->get(route('admin.payments.index', ['search' => $this->member->email]))
         ->assertInertia(fn (Assert $page) => $page->has('payments.data', 1)->where('payments.data.0.reference', $paid->reference));
 });
+
+test('an admin can narrow payments to a week, month, year or custom range', function () {
+    $this->travelTo(now()->setDate(2026, 6, 17)->setTime(12, 0));
+
+    $admin = User::factory()->create();
+    $admin->assignRole(RoleEnum::ADMIN->value);
+
+    $make = fn (string $when, int $cents) => PondPurchase::factory()->paid()->create([
+        'user_id' => $this->member->id,
+        'pond_id' => $this->pond->id,
+        'amount_cents' => $cents,
+        'created_at' => $when,
+    ]);
+
+    $make('2026-06-16 09:00:00', 1000); // this week and month
+    $make('2026-06-02 09:00:00', 2000); // this month, not this week
+    $make('2026-02-10 09:00:00', 4000); // this year, not this month
+    $make('2025-12-31 09:00:00', 8000); // last year
+
+    $count = fn (array $query) => $this->actingAs($admin)
+        ->get(route('admin.payments.index', $query))
+        ->assertInertia(fn (Assert $page) => $page->has('payments.data', $query['expected'])->where('totals.paid_cents', $query['cents']));
+
+    foreach ([
+        ['period' => 'week', 'expected' => 1, 'cents' => 1000],
+        ['period' => 'month', 'expected' => 2, 'cents' => 3000],
+        ['period' => 'year', 'expected' => 3, 'cents' => 7000],
+        ['period' => 'all', 'expected' => 4, 'cents' => 15000],
+        ['period' => 'custom', 'from' => '2026-02-01', 'to' => '2026-02-28', 'expected' => 1, 'cents' => 4000],
+        ['period' => 'custom', 'from' => '2026-06-30', 'to' => '2026-06-01', 'expected' => 2, 'cents' => 3000],
+        ['period' => 'custom', 'from' => '2026-06-10', 'expected' => 1, 'cents' => 1000],
+        ['period' => 'custom', 'from' => 'not-a-date', 'expected' => 4, 'cents' => 15000],
+        ['period' => 'nonsense', 'expected' => 4, 'cents' => 15000],
+    ] as $query) {
+        $count($query);
+    }
+
+    $this->actingAs($admin)
+        ->get(route('admin.payments.index', ['period' => 'custom', 'from' => '2026-02-01', 'to' => '2026-02-28']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.period', 'custom')
+            ->where('filters.from', '2026-02-01')
+            ->where('filters.to', '2026-02-28')
+            ->where('payments.data.0.gateway_payment_id', fn ($id) => str_starts_with($id, 'pay_'))
+        );
+});
+
+test('an admin can download the filtered payments as a spreadsheet', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(RoleEnum::ADMIN->value);
+
+    $risky = User::factory()->create(['name' => '=HYPERLINK("http://evil.test")']);
+    PondPurchase::factory()->paid()->create(['user_id' => $this->member->id, 'pond_id' => $this->pond->id, 'amount_cents' => 2500, 'is_test' => true]);
+    PondPurchase::factory()->create(['user_id' => $risky->id, 'pond_id' => $this->pond->id]);
+
+    $response = $this->actingAs($admin)->get(route('admin.payments.export', ['status' => 'paid', 'period' => 'month']));
+
+    $response->assertOk()->assertDownload();
+    expect($response->headers->get('content-type'))->toContain('text/csv')
+        ->and($response->headers->get('content-disposition'))->toContain('payments-this-month-');
+
+    $csv = $response->streamedContent();
+
+    expect($csv)->toContain('Reference,Date')
+        ->toContain($this->member->email)
+        ->toContain('25.00,USD,paid,Test')
+        ->not->toContain('evil.test');
+
+    $all = $this->actingAs($admin)->get(route('admin.payments.export'))->streamedContent();
+
+    expect($all)->toContain("\"'=HYPERLINK")
+        ->and(substr_count(trim($all), "\n"))->toBe(2);
+});
+
+test('only people allowed to view payments can download them', function () {
+    $this->actingAs($this->member)->get(route('admin.payments.export'))->assertForbidden();
+    auth()->logout();
+    $this->get(route('admin.payments.export'))->assertRedirect(route('login'));
+});

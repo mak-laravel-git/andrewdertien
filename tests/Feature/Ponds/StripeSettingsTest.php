@@ -142,11 +142,12 @@ test('Stripe live keys turn on Stripe in live mode', function () {
         ->and($gateways->isReady())->toBeTrue();
 });
 
-test('Stripe without a webhook secret is not ready to take payments', function () {
+test('Stripe takes payments without a webhook secret, because the return from Stripe confirms them', function () {
     PaymentSetting::factory()->stripeTest()->create(['stripe_webhook_secret' => null]);
     refreshStripeSettings();
 
-    expect(app(PaymentGatewayManager::class)->isReady())->toBeFalse();
+    expect(app(PaymentGatewayManager::class)->isReady())->toBeTrue()
+        ->and(app(StripeSettings::class)->hasWebhook())->toBeFalse();
 });
 
 test('switching Stripe off falls back to the sandbox, except in production', function () {
@@ -332,7 +333,8 @@ test('keys must look like Stripe keys', function (string $field, string $value) 
 test('Stripe cannot be switched on without its keys', function () {
     $this->actingAs($this->admin)
         ->put(route('admin.stripe.update'), stripeInput(['stripe_secret_key' => '', 'stripe_webhook_secret' => '']))
-        ->assertSessionHasErrors(['stripe_secret_key', 'stripe_webhook_secret']);
+        ->assertSessionHasErrors(['stripe_secret_key'])
+        ->assertSessionDoesntHaveErrors(['stripe_webhook_secret']);
 
     expect(PaymentSetting::query()->count())->toBe(0);
 });
@@ -422,4 +424,33 @@ test('payment rows say whether they were made in test mode', function () {
     $this->actingAs($this->admin)
         ->get(route('admin.payments.index'))
         ->assertInertia(fn (Assert $page) => $page->where('payments.data.0.is_test', true));
+});
+
+test('a member is sent to Stripe to pay and is confirmed on return, with no webhook set up', function () {
+    PaymentSetting::factory()->stripeTest()->create(['stripe_enabled' => true, 'stripe_webhook_secret' => null]);
+    refreshStripeSettings();
+
+    $pond = Pond::factory()->create(['price_cents' => 2500]);
+
+    Http::fake([
+        'api.stripe.com/v1/checkout/sessions' => Http::response(['id' => 'cs_test_123', 'url' => 'https://checkout.stripe.com/c/pay/cs_test_123']),
+        'api.stripe.com/v1/checkout/sessions/cs_test_123' => Http::response(['id' => 'cs_test_123', 'status' => 'complete', 'payment_status' => 'paid', 'payment_intent' => 'pi_test_123']),
+    ]);
+
+    $this->actingAs($this->member)
+        ->post(route('member.checkout.store', $pond->slug))
+        ->assertRedirect('https://checkout.stripe.com/c/pay/cs_test_123');
+
+    $purchase = PondPurchase::sole();
+
+    expect($purchase->gateway)->toBe('stripe')
+        ->and($purchase->is_test)->toBeTrue()
+        ->and($purchase->isPending())->toBeTrue();
+
+    $this->actingAs($this->member)
+        ->get(route('payments.return', $purchase))
+        ->assertRedirect(route('member.ponds.owned'));
+
+    expect($purchase->fresh()->isPaid())->toBeTrue()
+        ->and($this->member->ownsPond($pond))->toBeTrue();
 });

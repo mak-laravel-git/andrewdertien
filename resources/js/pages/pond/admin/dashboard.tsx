@@ -1,6 +1,21 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowRight, CircleAlert, CircleCheck, CreditCard, FlaskConical, Plus, ShoppingBag, Users, Waves } from 'lucide-react';
-import { formatMoney, PaymentsTable, PondArt, StatTile } from '@/components/pond/commerce';
+import {
+    ArrowRight,
+    CircleAlert,
+    CircleCheck,
+    CreditCard,
+    FlaskConical,
+    Plus,
+    ShoppingBag,
+    Users,
+    Waves,
+} from 'lucide-react';
+import {
+    formatMoney,
+    PaymentsTable,
+    PondArt,
+    StatTile,
+} from '@/components/pond/commerce';
 import type { PaymentRow } from '@/components/pond/commerce';
 import type { PaymentMode } from '@/components/pond/payment-mode';
 import { EmptyState, PondShell } from '@/components/pond/ui';
@@ -10,24 +25,60 @@ import adminStripe from '@/routes/admin/stripe';
 import adminUsers from '@/routes/admin/users';
 
 type Props = {
-    stats: { revenue_cents: number; revenue_30d_cents: number; purchases: number; members: number; buyers: number; ponds: number; ponds_on_frontend: number };
+    stats: {
+        revenue_cents: number;
+        revenue_30d_cents: number;
+        purchases: number;
+        members: number;
+        buyers: number;
+        ponds: number;
+        ponds_on_frontend: number;
+    };
     currency: string;
     revenueByMonth: { month: string; revenue_cents: number }[];
     recentPayments: PaymentRow[];
-    topPonds: { id: number; name: string; image_url: string; sales: number; revenue_cents: number }[];
-    gateway: { driver: string; mode: PaymentMode; is_test_mode: boolean; is_ready: boolean };
+    topPonds: {
+        id: number;
+        name: string;
+        image_url: string;
+        sales: number;
+        revenue_cents: number;
+    }[];
+    gateway: {
+        driver: string;
+        mode: PaymentMode;
+        is_test_mode: boolean;
+        is_ready: boolean;
+    };
 };
 
-function RevenueChart({ months, currency }: { months: Props['revenueByMonth']; currency: string }) {
+function RevenueChart({
+    months,
+    currency,
+}: {
+    months: Props['revenueByMonth'];
+    currency: string;
+}) {
     const highest = Math.max(...months.map((month) => month.revenue_cents), 1);
 
     return (
-        <div className="pd-bars" role="img" aria-label={`Revenue by month: ${months.map((month) => `${month.month} ${formatMoney(month.revenue_cents, currency)}`).join(', ')}`}>
+        <div
+            className="pd-bars"
+            role="img"
+            aria-label={`Revenue by month: ${months.map((month) => `${month.month} ${formatMoney(month.revenue_cents, currency)}`).join(', ')}`}
+        >
             {months.map((month) => (
                 <div className="pd-bar-slot" key={month.month}>
                     <div className="pd-bar-track">
-                        <span className="pd-bar-tip">{formatMoney(month.revenue_cents, currency)}</span>
-                        <div className="pd-bar" style={{ height: `${Math.max(month.revenue_cents / highest * 100, month.revenue_cents ? 3 : 0)}%` }} />
+                        <span className="pd-bar-tip">
+                            {formatMoney(month.revenue_cents, currency)}
+                        </span>
+                        <div
+                            className="pd-bar"
+                            style={{
+                                height: `${Math.max((month.revenue_cents / highest) * 100, month.revenue_cents ? 3 : 0)}%`,
+                            }}
+                        />
                     </div>
                     <small>{month.month}</small>
                 </div>
@@ -50,7 +101,8 @@ function GatewayNotice({ gateway }: { gateway: Props['gateway'] }) {
                 <div>
                     <strong>Payments are in test mode</strong>
                     <p>
-                        Checkouts are simulated and no money moves. Connect Stripe to take real payments. {settingsLink}
+                        Checkouts are simulated and no money moves. Connect
+                        Stripe to take real payments. {settingsLink}
                     </p>
                 </div>
             </div>
@@ -64,7 +116,9 @@ function GatewayNotice({ gateway }: { gateway: Props['gateway'] }) {
                 <div>
                     <strong>Stripe is in test mode</strong>
                     <p>
-                        Members can only pay with Stripe test cards and no real money moves. Add your live keys to go live. {settingsLink}
+                        Members can only pay with Stripe test cards and no real
+                        money moves. Add your live keys to go live.{' '}
+                        {settingsLink}
                     </p>
                 </div>
             </div>
@@ -77,7 +131,10 @@ function GatewayNotice({ gateway }: { gateway: Props['gateway'] }) {
                 <CircleCheck size={19} />
                 <div>
                     <strong>Stripe is live</strong>
-                    <p>Members pay on Stripe Checkout and payments are recorded automatically.</p>
+                    <p>
+                        Members pay on Stripe Checkout and payments are recorded
+                        automatically.
+                    </p>
                 </div>
             </div>
         );
@@ -87,16 +144,24 @@ function GatewayNotice({ gateway }: { gateway: Props['gateway'] }) {
         <div className="pd-notice pd-notice-error">
             <CircleAlert size={19} />
             <div>
-                <strong>Payments are not fully set up</strong>
+                <strong>Payments are not set up</strong>
                 <p>
-                    Add your Stripe secret key and webhook signing secret before members can pay. {settingsLink}
+                    Add your Stripe secret key and switch Stripe on before
+                    members can pay. {settingsLink}
                 </p>
             </div>
         </div>
     );
 }
 
-export default function AdminDashboard({ stats, currency, revenueByMonth, recentPayments, topPonds, gateway }: Props) {
+export default function AdminDashboard({
+    stats,
+    currency,
+    revenueByMonth,
+    recentPayments,
+    topPonds,
+    gateway,
+}: Props) {
     return (
         <>
             <Head title="Admin overview" />
@@ -105,7 +170,10 @@ export default function AdminDashboard({ stats, currency, revenueByMonth, recent
                 subheading="Ponds, members and payments at a glance."
                 demo={false}
                 action={
-                    <Link href={adminPonds.create()} className="pond-btn pond-btn-primary">
+                    <Link
+                        href={adminPonds.create()}
+                        className="pond-btn pond-btn-primary"
+                    >
                         <Plus size={17} /> New pond
                     </Link>
                 }
@@ -113,10 +181,33 @@ export default function AdminDashboard({ stats, currency, revenueByMonth, recent
                 <GatewayNotice gateway={gateway} />
 
                 <div className="pd-stats">
-                    <StatTile icon={CreditCard} label="Total revenue" value={formatMoney(stats.revenue_cents, currency)} hint={`${formatMoney(stats.revenue_30d_cents, currency)} in the last 30 days`} tone="green" />
-                    <StatTile icon={ShoppingBag} label="Ponds sold" value={String(stats.purchases)} hint={`${stats.buyers} ${stats.buyers === 1 ? 'buyer' : 'buyers'}`} tone="pink" />
-                    <StatTile icon={Users} label="Members" value={String(stats.members)} hint="Registered users" />
-                    <StatTile icon={Waves} label="Ponds" value={String(stats.ponds)} hint={`${stats.ponds_on_frontend} on the website`} tone="green" />
+                    <StatTile
+                        icon={CreditCard}
+                        label="Total revenue"
+                        value={formatMoney(stats.revenue_cents, currency)}
+                        hint={`${formatMoney(stats.revenue_30d_cents, currency)} in the last 30 days`}
+                        tone="green"
+                    />
+                    <StatTile
+                        icon={ShoppingBag}
+                        label="Ponds sold"
+                        value={String(stats.purchases)}
+                        hint={`${stats.buyers} ${stats.buyers === 1 ? 'buyer' : 'buyers'}`}
+                        tone="pink"
+                    />
+                    <StatTile
+                        icon={Users}
+                        label="Members"
+                        value={String(stats.members)}
+                        hint="Registered users"
+                    />
+                    <StatTile
+                        icon={Waves}
+                        label="Ponds"
+                        value={String(stats.ponds)}
+                        hint={`${stats.ponds_on_frontend} on the website`}
+                        tone="green"
+                    />
                 </div>
 
                 <div className="pd-grid-2">
@@ -124,7 +215,10 @@ export default function AdminDashboard({ stats, currency, revenueByMonth, recent
                         <div className="pond-panel-header">
                             <h2>Revenue, last 6 months</h2>
                         </div>
-                        <RevenueChart months={revenueByMonth} currency={currency} />
+                        <RevenueChart
+                            months={revenueByMonth}
+                            currency={currency}
+                        />
                     </section>
 
                     <section className="pond-panel">
@@ -142,15 +236,27 @@ export default function AdminDashboard({ stats, currency, revenueByMonth, recent
                                         <div>
                                             <strong>{pond.name}</strong>
                                             <small>
-                                                {pond.sales} {pond.sales === 1 ? 'sale' : 'sales'}
+                                                {pond.sales}{' '}
+                                                {pond.sales === 1
+                                                    ? 'sale'
+                                                    : 'sales'}
                                             </small>
                                         </div>
-                                        <strong>{formatMoney(pond.revenue_cents, currency)}</strong>
+                                        <strong>
+                                            {formatMoney(
+                                                pond.revenue_cents,
+                                                currency,
+                                            )}
+                                        </strong>
                                     </li>
                                 ))}
                             </ul>
                         ) : (
-                            <EmptyState icon={<Waves size={25} />} title="No ponds yet" body="Create your first pond to start selling." />
+                            <EmptyState
+                                icon={<Waves size={25} />}
+                                title="No ponds yet"
+                                body="Create your first pond to start selling."
+                            />
                         )}
                     </section>
                 </div>
@@ -163,9 +269,21 @@ export default function AdminDashboard({ stats, currency, revenueByMonth, recent
                         </Link>
                     </div>
                     {recentPayments.length ? (
-                        <PaymentsTable rows={recentPayments} showBuyer buyerHref={(row) => (row.user_id ? adminUsers.show(row.user_id).url : null)} />
+                        <PaymentsTable
+                            rows={recentPayments}
+                            showBuyer
+                            buyerHref={(row) =>
+                                row.user_id
+                                    ? adminUsers.show(row.user_id).url
+                                    : null
+                            }
+                        />
                     ) : (
-                        <EmptyState icon={<CreditCard size={25} />} title="No payments yet" body="Payments appear here as soon as members start buying ponds." />
+                        <EmptyState
+                            icon={<CreditCard size={25} />}
+                            title="No payments yet"
+                            body="Payments appear here as soon as members start buying ponds."
+                        />
                     )}
                 </section>
             </PondShell>

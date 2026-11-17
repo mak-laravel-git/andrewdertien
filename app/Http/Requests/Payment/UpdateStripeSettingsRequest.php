@@ -52,16 +52,9 @@ class UpdateStripeSettingsRequest extends FormRequest
             $saved = PaymentSetting::query()->first();
             $secret = $this->filled('stripe_secret_key') ? $this->string('stripe_secret_key')->toString() : $saved?->stripe_secret_key;
             $publishable = $this->filled('stripe_publishable_key') ? $this->string('stripe_publishable_key')->toString() : $saved?->stripe_publishable_key;
-            $webhook = $this->filled('stripe_webhook_secret') ? $this->string('stripe_webhook_secret')->toString() : $saved?->stripe_webhook_secret;
 
-            if ($this->boolean('stripe_enabled')) {
-                if (blank($secret)) {
-                    $validator->errors()->add('stripe_secret_key', 'Enter your Stripe secret key before switching Stripe on.');
-                }
-
-                if (blank($webhook)) {
-                    $validator->errors()->add('stripe_webhook_secret', 'Enter your Stripe webhook signing secret before switching Stripe on. Without it payments cannot be confirmed.');
-                }
+            if ($this->boolean('stripe_enabled') && blank($secret)) {
+                $validator->errors()->add('stripe_secret_key', 'Enter your Stripe secret key before switching Stripe on.');
             }
 
             $secretMode = StripeSettings::modeOf($secret);
