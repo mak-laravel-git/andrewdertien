@@ -6,8 +6,8 @@ use App\Models\PondPurchase;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
-test('the website only shows ponds the admin chose', function () {
-    $shown = Pond::factory()->create(['name' => 'Shown Pond']);
+test('the pond list only shows ponds the admin chose, and the homepage stays simple', function () {
+    Pond::factory()->create(['name' => 'Shown Pond']);
     Pond::factory()->hiddenFromFrontend()->create();
     Pond::factory()->draft()->create();
 
@@ -15,8 +15,7 @@ test('the website only shows ponds the admin chose', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('pond/welcome')
-            ->has('ponds', 1)
-            ->where('ponds.0.id', $shown->id)
+            ->missing('ponds')
         );
 
     $this->get(route('ponds.index'))

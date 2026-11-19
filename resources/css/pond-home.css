@@ -228,8 +228,24 @@
 .hm-tile-fun strong { background: #e4d6ff; color: #3b1a8f; }
 .hm-tile-treats strong { background: #ffe5bd; color: #7a3d00; }
 .hm-tile-boost strong { background: #dbe9ff; color: #10305f; }
-.hm-tile-creator strong { background: #ffd0dc; color: #8a1238; }
-.hm-tile-flirt strong { background: #cdf5dc; color: #0d5a2c; }
+.hm-tile-creator strong { background: #c9f6f2; color: #05585f; }
+.hm-tile-flirt strong { background: #ffd3ea; color: #8a1250; }
+
+.hm-tile small {
+    margin-top: -2px;
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: italic;
+    font-size: clamp(11px, 1.2vw, 13.5px);
+    line-height: 1.2;
+    text-align: center;
+    color: #8a1250;
+}
+
+.hm-tile-flirt img {
+    width: clamp(70px, 9.4vw, 116px);
+    margin-block: -6px -4px;
+    border-radius: 24%;
+}
 
 @media (max-width: 780px) {
     .hm-tiles {
@@ -516,27 +532,6 @@
     }
 }
 
-/* ── Ponds chosen by the admin (only when there are some) ───────────────── */
-.hm-page .pd-home-ponds {
-    text-align: center;
-}
-
-.hm-page .pd-home-ponds .pd-pond-grid {
-    text-align: left;
-}
-
-.hm-page .pd-home-ponds .askupon-ways-head h2 {
-    font-family: 'Fraunces', Georgia, serif;
-    font-style: italic;
-    font-size: clamp(32px, 5vw, 52px);
-    color: #2a1480;
-}
-
-.hm-page .pd-home-ponds .askupon-ways-head p {
-    color: #4b4590;
-    font-size: 18px;
-}
-
 /* ── Closing call to action ─────────────────────────────────────────────── */
 .hm-final {
     position: relative;
@@ -655,84 +650,63 @@
     color: #2a1480;
 }
 
-.hm-something {
+.hm-profiles {
     max-width: 1040px;
     margin: 0 auto;
     padding: 40px 24px 64px;
+    text-align: center;
 }
 
-.hm-options {
+.hm-profile-grid {
     display: grid;
-    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
     margin-top: 30px;
+    text-align: left;
 }
 
-.hm-option {
+.hm-profile {
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 18px;
-    align-items: center;
-    padding: 18px 22px;
-    border: 1px solid #ffffffd0;
-    border-radius: 20px;
-    background: #fff;
-    box-shadow: 0 10px 28px #2a1a7a1a;
-}
-
-.hm-option-icon {
-    display: inline-grid;
-    place-items: center;
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
-    background: #ece6ff;
-    color: #5b2bd6;
-}
-
-.hm-option h3 {
-    font-family: 'Fraunces', Georgia, serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: #2a1480;
-}
-
-.hm-option p {
-    margin-top: 2px;
-    font-size: 16px;
-    line-height: 1.5;
-    color: #2a2866;
-}
-
-.hm-joe {
-    display: grid;
-    grid-template-columns: minmax(200px, 0.8fr) 1.4fr;
-    gap: 26px;
-    align-items: stretch;
-    margin-top: 26px;
-    padding: 18px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
     border: 1px solid #d8ccff;
     border-radius: 26px;
     background: linear-gradient(135deg, #f4efff, #e6edff);
     box-shadow: 0 16px 40px #2a1a7a24;
 }
 
-.hm-joe img {
+.hm-profile-media {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(135deg, #5b2bd6, #2a9fe0);
+}
+
+.hm-profile-media img {
     width: 100%;
     height: 100%;
-    min-height: 220px;
-    border-radius: 18px;
     object-fit: cover;
 }
 
-.hm-joe-body {
-    display: grid;
-    align-content: center;
-    gap: 6px;
-    padding: 6px 8px;
+.hm-profile-media span {
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: italic;
+    font-size: 84px;
+    line-height: 1;
+    color: #fff;
 }
 
-.hm-joe-tag {
-    justify-self: start;
+.hm-profile-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    justify-items: start;
+    gap: 8px;
+    padding: 20px 22px 24px;
+}
+
+.hm-profile-tag {
     padding: 4px 14px;
     border-radius: 999px;
     background: #5b2bd6;
@@ -741,44 +715,33 @@
     font-weight: 800;
 }
 
-.hm-joe-body h3 {
-    margin-top: 8px;
+.hm-profile-body h3 {
+    margin-top: 6px;
     font-family: 'Fraunces', Georgia, serif;
-    font-size: 21px;
+    font-size: 24px;
     font-weight: 700;
     color: #2a1480;
 }
 
-.hm-joe-body p {
+.hm-profile-body p {
     font-size: 16px;
     font-style: italic;
-    line-height: 1.5;
+    line-height: 1.55;
     color: #2a2866;
 }
 
-.hm-joe-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 16px;
-}
-
-.hm-joe-buttons .hm-btn {
+.hm-profile-body .hm-btn {
+    margin-top: 10px;
     padding: 12px 22px;
     font-size: 15px;
 }
 
-@media (max-width: 600px) {
-    .hm-joe {
+@media (max-width: 760px) {
+    .hm-profile-grid {
         grid-template-columns: 1fr;
     }
 
-    .hm-joe img {
-        min-height: 180px;
-        max-height: 240px;
-    }
-
-    .hm-joe-buttons .hm-btn {
-        flex: 1 1 100%;
+    .hm-profile-body .hm-btn {
+        width: 100%;
     }
 }

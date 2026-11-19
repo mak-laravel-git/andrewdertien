@@ -1,21 +1,32 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowRight, Gift, HandHeart, Play, Sprout, UsersRound } from 'lucide-react';
-import type { PondCard } from '@/components/pond/commerce';
+import { ArrowRight, Gift, HandHeart, Play, UsersRound } from 'lucide-react';
 import { DuskPondScene, FriendswoodSign } from '@/components/pond/dusk-scene';
 import { useScrollReveal } from '@/components/pond/pond-motion';
-import { PublicPondGrid } from '@/components/pond/public-pond-grid';
 import { PublicNavActions } from '@/components/pond/public-shell';
 import { Brand, PondMark } from '@/components/pond/ui';
 import { dashboard, register } from '@/routes';
 import { index as pondsIndex } from '@/routes/ponds';
 
 const ballTiles = [
-    { title: 'Dreams', tone: 'dreams', ball: 'blue' },
-    { title: 'Fun', tone: 'fun', ball: 'purple' },
-    { title: 'Treats', tone: 'treats', ball: 'orange' },
-    { title: 'Boost', tone: 'boost', ball: 'white' },
-    { title: 'Support a Creator', tone: 'creator', ball: 'red' },
-    { title: 'Flirt', tone: 'flirt', ball: 'green' },
+    { title: 'Dreams', tone: 'dreams', image: '/askupon/balls/golf-blue.svg' },
+    { title: 'Fun', tone: 'fun', image: '/askupon/balls/golf-purple.svg' },
+    {
+        title: 'Treats',
+        tone: 'treats',
+        image: '/askupon/balls/golf-orange.svg',
+    },
+    { title: 'Boost', tone: 'boost', image: '/askupon/balls/golf-white.svg' },
+    {
+        title: 'Support a Creator',
+        tone: 'creator',
+        image: '/askupon/balls/golf-aqua.svg',
+    },
+    {
+        title: 'Flirt',
+        caption: 'Fluttery feelings',
+        tone: 'flirt',
+        image: '/askupon/balls/golf-flirt-butterfly.webp',
+    },
 ];
 
 const stories = [
@@ -35,7 +46,9 @@ const stories = [
         image: '/askupon/story/book-cover.jpg',
         alt: 'Cover of Andrew Dertien’s book Uber Dick: Down and Out in San Francisco',
         position: '50% 8%',
-        paragraphs: ['Years later came loss, struggle, and rebuilding while supporting my kids.'],
+        paragraphs: [
+            'Years later came loss, struggle, and rebuilding while supporting my kids.',
+        ],
     },
     {
         title: 'My Son’s Vision',
@@ -62,29 +75,62 @@ const stories = [
 ];
 
 const actions = [
-    { title: 'Collect', ball: 'blue', body: 'Buy a few, build your collection, and keep them for whenever you feel like making a splash.' },
-    { title: 'Give', ball: 'purple', body: 'See someone you like? Love their story? Want to brighten their day? Toss them a ball or two.' },
-    { title: 'Receive', ball: 'gold', body: 'Share your world. Your dreams, your adventures, or just what you’re up to. You never know who might toss something your way.' },
-    { title: 'Play', ball: 'green', body: 'Hold onto your balls, send them to someone, or save them for something special. It’s your Pond.' },
+    {
+        title: 'Collect',
+        ball: 'blue',
+        body: 'Find your favorites. Build your collection.',
+    },
+    {
+        title: 'Give',
+        ball: 'purple',
+        body: 'Make someone’s day. Send a ball their way.',
+    },
+    {
+        title: 'Receive',
+        ball: 'aqua',
+        body: 'Share your world. See what comes your way.',
+    },
+    {
+        title: 'Play',
+        ball: 'green',
+        body: 'A little adventure. See where your balls go.',
+    },
 ];
 
-const everyoneOptions = [
-    { title: 'Make Someone’s Day', body: 'Surprise someone with a coffee, a treat, or a ball just because.', icon: Gift },
-    { title: 'Support a Dream', body: 'Find someone working toward something and toss a ball their way.', icon: Sprout },
-    { title: 'Find Your People', body: 'Discover people with shared interests, ideas, and adventures.', icon: UsersRound },
+/** Placeholder profiles until James and Andrew send the real ones. */
+const sampleProfiles = [
+    {
+        name: 'James',
+        image: '/askupon/story/james.jpg',
+        position: '45% 30%',
+        dream: 'Spend my last year of high school outside the city, on a piece of land where I can raise dogs, grow food, and learn to live off the land.',
+    },
+    {
+        name: 'Andrew',
+        image: null,
+        position: '',
+        dream: 'Leave San Francisco, build a life on a little land of our own, and help others make things happen along the way.',
+    },
 ];
 
-const actionIcons ={ Collect: UsersRound, Give: Gift, Receive: HandHeart, Play: Play };
+const actionIcons = {
+    Collect: UsersRound,
+    Give: Gift,
+    Receive: HandHeart,
+    Play: Play,
+};
 
 function golfBall(color: string): string {
     return `/askupon/balls/golf-${color}.svg`;
 }
 
-export default function Welcome({ ponds = [] }: { ponds?: PondCard[] }) {
+export default function Welcome() {
     const { auth } = usePage().props;
     const joinHref = auth?.user ? dashboard() : register();
 
-    useScrollReveal('.hm-tile, .hm-story-card, .hm-muddy-copy, .hm-action, .hm-imagine h2, .hm-option, .hm-joe,.pd-home-ponds .pd-pond-card, .hm-final h2');
+    useScrollReveal(
+        '.hm-tile, .hm-story-card, .hm-muddy-copy, .hm-action, .hm-imagine h2, .hm-profile, .hm-final h2',
+    );
 
     return (
         <div className="pond-home askupon-home hm-page">
@@ -109,14 +155,19 @@ export default function Welcome({ ponds = [] }: { ponds?: PondCard[] }) {
 
                 <div className="hm-hero-copy">
                     <h1>
-                        Connect. Share your world. <span>Give and receive.</span>
+                        Connect. Share your world.{' '}
+                        <span>Give and receive.</span>
                     </h1>
                     <p>
-                        A little Insta. A little Cash App. A little GoFundMe. Even a little Tinder (if you check that box). A whole lot of experimentation.{' '}
-                        <em>All in one Pond.</em>
+                        A little Insta. A little Cash App. A little GoFundMe.
+                        Even a little Tinder (if you check that box). A whole
+                        lot of experimentation. <em>All in one Pond.</em>
                     </p>
                     <div className="hm-hero-buttons">
-                        <Link href={pondsIndex()} className="hm-btn hm-btn-explore">
+                        <Link
+                            href={pondsIndex()}
+                            className="hm-btn hm-btn-explore"
+                        >
                             Explore the Pond <ArrowRight size={18} />
                         </Link>
                         <Link href={joinHref} className="hm-btn hm-btn-join">
@@ -126,12 +177,20 @@ export default function Welcome({ ponds = [] }: { ponds?: PondCard[] }) {
                 </div>
             </section>
 
-            <section className="hm-tiles-wrap" id="explore" aria-label="Ways to use the Pond">
+            <section
+                className="hm-tiles-wrap"
+                id="explore"
+                aria-label="Ways to use the Pond"
+            >
                 <div className="hm-tiles">
                     {ballTiles.map((tile) => (
-                        <div key={tile.title} className={`hm-tile hm-tile-${tile.tone}`}>
-                            <img src={golfBall(tile.ball)} alt="" />
+                        <div
+                            key={tile.title}
+                            className={`hm-tile hm-tile-${tile.tone}`}
+                        >
+                            <img src={tile.image} alt="" />
                             <strong>{tile.title}</strong>
+                            {tile.caption && <small>{tile.caption}</small>}
                         </div>
                     ))}
                 </div>
@@ -145,8 +204,21 @@ export default function Welcome({ ponds = [] }: { ponds?: PondCard[] }) {
                 <div className="hm-stories">
                     {stories.map((story, index) => (
                         <article key={story.title} className="hm-story-card">
-                            <div className={`hm-story-media ${story.image ? '' : 'hm-story-media-pond'}`}>
-                                {story.image ? <img src={story.image} alt={story.alt} style={{ objectPosition: story.position }} loading="lazy" /> : <PondMark />}
+                            <div
+                                className={`hm-story-media ${story.image ? '' : 'hm-story-media-pond'}`}
+                            >
+                                {story.image ? (
+                                    <img
+                                        src={story.image}
+                                        alt={story.alt}
+                                        style={{
+                                            objectPosition: story.position,
+                                        }}
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <PondMark />
+                                )}
                             </div>
                             <div className="hm-story-body">
                                 <h3>
@@ -168,21 +240,49 @@ export default function Welcome({ ponds = [] }: { ponds?: PondCard[] }) {
                         <h2 className="hm-heading hm-heading-left">
                             <span>Let&rsquo;s Talk Muddy Bottoms</span>
                         </h2>
-                        <p>Back in Friendswood, Texas, we&rsquo;d wade barefoot into those muddy ponds in the humid summer heat, feeling around with our feet.</p>
-                        <p>And then we&rsquo;d feel it. Something round. Something solid.</p>
+                        <p>
+                            Back in Friendswood, Texas, we&rsquo;d wade barefoot
+                            into muddy ponds in the humid summer heat, feeling
+                            around with our feet.
+                        </p>
+                        <p>
+                            And then we&rsquo;d feel it. Something round.
+                            Something solid.
+                        </p>
+                        <p>A golf ball!</p>
                         <p className="hm-chaching">CHA-CHING!</p>
-                        <p>That&rsquo;s the feeling we want to bring to the Pond.</p>
-                        <p>Every time you buy a ball. Every time you give a ball. Every time you receive a ball.</p>
-                        <p className="hm-quantum">Maybe they&rsquo;re quantum balls. Part money. Part hope. Who knows how far one might go?</p>
+                        <p>
+                            Finding those golf balls felt like discovering
+                            treasure. A little money. A little adventure. A
+                            whole lot of possibility.
+                        </p>
+                        <p>
+                            That&rsquo;s the feeling we want to bring to the
+                            Pond.
+                        </p>
+                        <p>
+                            Every time you collect a ball. Give a ball. Receive
+                            a ball.
+                        </p>
+                        <p className="hm-quantum">
+                            Maybe they&rsquo;re quantum balls. Part money. Part
+                            hope. Who knows how far one might go?
+                        </p>
                     </div>
                 </div>
 
                 <div className="hm-actions">
                     {actions.map((action) => {
-                        const Icon = actionIcons[action.title as keyof typeof actionIcons];
+                        const Icon =
+                            actionIcons[
+                                action.title as keyof typeof actionIcons
+                            ];
 
                         return (
-                            <article key={action.title} className={`hm-action hm-action-${action.title.toLowerCase()}`}>
+                            <article
+                                key={action.title}
+                                className={`hm-action hm-action-${action.title.toLowerCase()}`}
+                            >
                                 <span className="hm-action-icon">
                                     <img src={golfBall(action.ball)} alt="" />
                                     <Icon size={18} aria-hidden="true" />
@@ -202,63 +302,69 @@ export default function Welcome({ ponds = [] }: { ponds?: PondCard[] }) {
                 </Link>
             </section>
 
-            <section className="hm-something" aria-labelledby="hm-something-title">
-                <h2 id="hm-something-title" className="hm-heading">
-                    <span>A Little Something for Everyone</span>
+            <section
+                className="hm-profiles"
+                id="dream-life"
+                aria-labelledby="hm-profiles-title"
+            >
+                <h2 id="hm-profiles-title" className="hm-heading">
+                    <span>Dream Life Profiles</span>
                 </h2>
-                <div className="hm-options">
-                    {everyoneOptions.map(({ title, body, icon: Icon }) => (
-                        <article key={title} className="hm-option">
-                            <span className="hm-option-icon">
-                                <Icon size={24} aria-hidden="true" />
-                            </span>
-                            <div>
-                                <h3>{title}</h3>
-                                <p>{body}</p>
+                <p className="hm-subheading">
+                    See how it works with two real profiles.
+                </p>
+                <div className="hm-profile-grid">
+                    {sampleProfiles.map((profile) => (
+                        <article
+                            key={profile.name}
+                            className="hm-profile"
+                            aria-label={`${profile.name}’s Dream Life profile`}
+                        >
+                            <div className="hm-profile-media">
+                                {profile.image ? (
+                                    <img
+                                        src={profile.image}
+                                        alt={`${profile.name}`}
+                                        style={{
+                                            objectPosition: profile.position,
+                                        }}
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <span aria-hidden="true">
+                                        {profile.name.charAt(0)}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="hm-profile-body">
+                                <span className="hm-profile-tag">
+                                    Dream Life
+                                </span>
+                                <h3>{profile.name}&rsquo;s Dream Life</h3>
+                                <p>&ldquo;{profile.dream}&rdquo;</p>
+                                <Link
+                                    href={joinHref}
+                                    className="hm-btn hm-btn-purple"
+                                >
+                                    Toss {profile.name} a Ball{' '}
+                                    <ArrowRight size={16} />
+                                </Link>
                             </div>
                         </article>
                     ))}
                 </div>
-
-                <article className="hm-joe" aria-label="Sample member profile">
-                    <img src="/askupon/pond-reeds-sunset.jpg" alt="A quiet pond at sunset, standing in for Joe’s photo" loading="lazy" />
-                    <div className="hm-joe-body">
-                        <span className="hm-joe-tag">Meet Joe</span>
-                        <h3>Joe&rsquo;s Dream Life</h3>
-                        <p>&ldquo;A piece of land outside the city where I can raise dogs, grow food, and enjoy a simpler life.&rdquo;</p>
-                        <h3>Something Small That Would Make My Day</h3>
-                        <p>&ldquo;A good cup of coffee!&rdquo;</p>
-                        <div className="hm-joe-buttons">
-                            <Link href={joinHref} className="hm-btn hm-btn-purple">
-                                Buy Joe a Ball Toward His Dream <ArrowRight size={16} />
-                            </Link>
-                            <Link href={joinHref} className="hm-btn hm-btn-outline">
-                                Surprise Joe with a Coffee <ArrowRight size={16} />
-                            </Link>
-                        </div>
-                    </div>
-                </article>
             </section>
 
-            {ponds.length > 0 && (
-                <section className="pd-home-ponds" id="ponds">
-                    <div className="askupon-ways-head">
-                        <h2>Find your pond.</h2>
-                        <p>Pick the one that feels like yours.</p>
-                    </div>
-                    <PublicPondGrid ponds={ponds} />
-                    <div className="askupon-ways-ctas">
-                        <Link href={pondsIndex()} className="hm-btn hm-btn-explore hm-btn-dark">
-                            See all the ponds <ArrowRight size={16} />
-                        </Link>
-                    </div>
-                </section>
-            )}
-
             <section className="hm-final">
-                <h2>Your Pond. Your people. Your adventure.</h2>
-                <p>Start collecting. Start connecting. Give. Receive. See where it goes.</p>
-                <Link href={joinHref} className="hm-btn hm-btn-join hm-btn-final">
+                <h2>Your Pond. Your People. Your Adventure.</h2>
+                <p>
+                    Start collecting. Start connecting. Give. Receive. See where
+                    it goes.
+                </p>
+                <Link
+                    href={joinHref}
+                    className="hm-btn hm-btn-join hm-btn-final"
+                >
                     Join the Pond <ArrowRight size={18} />
                 </Link>
             </section>

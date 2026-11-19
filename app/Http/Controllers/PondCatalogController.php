@@ -17,7 +17,6 @@ class PondCatalogController extends Controller
     {
         return Inertia::render('pond/welcome', [
             'canRegister' => Features::enabled(Features::registration()),
-            'ponds' => Pond::query()->onFrontend()->ordered()->limit(6)->get()->map->toCard(),
         ]);
     }
 
