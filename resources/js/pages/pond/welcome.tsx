@@ -25,7 +25,7 @@ const ballTiles = [
         title: 'Flirt',
         caption: 'Fluttery feelings',
         tone: 'flirt',
-        image: '/askupon/balls/golf-flirt-butterfly.webp',
+        image: '/askupon/balls/golf-flirt.webp',
     },
 ];
 
