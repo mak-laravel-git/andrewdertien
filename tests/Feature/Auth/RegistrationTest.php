@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
@@ -17,8 +19,8 @@ function registrationPayload(array $overrides = []): array
         'name' => 'Test User',
         'username' => 'test_user',
         'email' => 'test@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
+        'password' => 'Password123!',
+        'password_confirmation' => 'Password123!',
         ...$overrides,
     ];
 }
@@ -47,6 +49,39 @@ test('new users can register', function () {
         ->username->toBe('test_user')
         ->open_to_romance->toBeFalse()
         ->date_of_birth->toBeNull();
+});
+
+test('live passwords need upper and lower case letters, a number and a symbol', function (string $weakPassword) {
+    $this->app['env'] = 'production';
+
+    $validator = Validator::make(
+        ['password' => $weakPassword, 'password_confirmation' => $weakPassword],
+        ['password' => ['required', 'string', Password::default(), 'confirmed']],
+    );
+
+    expect($validator->fails())->toBeTrue();
+})->with([
+    'no symbol' => 'Password123',
+    'no uppercase' => 'password123!',
+    'no lowercase' => 'PASSWORD123!',
+    'no number' => 'Password!!!',
+    'too short' => 'Pa1!',
+]);
+
+test('a password needs at least 8 characters, and exactly 8 is accepted', function () {
+    $this->post(route('register.store'), registrationPayload([
+        'password' => 'short12',
+        'password_confirmation' => 'short12',
+    ]))->assertSessionHasErrors('password');
+
+    $this->assertGuest();
+
+    $this->post(route('register.store'), registrationPayload([
+        'password' => 'Eight8!x',
+        'password_confirmation' => 'Eight8!x',
+    ]))->assertSessionHasNoErrors();
+
+    $this->assertAuthenticated();
 });
 
 test('a username is required and must be unique', function () {

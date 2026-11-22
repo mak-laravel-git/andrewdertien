@@ -3376,17 +3376,29 @@
     margin-top: 14px
 }
 
-.pond-search-results a {
+.pond-search-results a,
+.pond-search-results .pond-search-submit {
     display: flex;
     align-items: center;
     gap: 10px;
+    width: 100%;
+    border: 0;
     border-bottom: 1px solid #eef2f7;
+    background: transparent;
     padding: 12px 7px;
+    font: inherit;
     font-size: 12px;
-    color: #5b6d89
+    text-align: left;
+    color: #5b6d89;
+    cursor: pointer
 }
 
-.pond-search-results a svg:last-child {
+.pond-search-results .pond-search-submit {
+    overflow-wrap: anywhere
+}
+
+.pond-search-results a svg:last-child,
+.pond-search-results .pond-search-submit svg:last-child {
     margin-left: auto
 }
 

@@ -41,7 +41,7 @@ test('a user can be created with a role', function () {
         ->post(route('admin.users.store'), [
             'name' => 'Jane Doe',
             'email' => 'jane@example.com',
-            'password' => 'password123',
+            'password' => 'Password123!',
             'roles' => [RoleEnum::ADMIN->value],
         ])
         ->assertRedirect(route('admin.users.index'));
@@ -50,7 +50,7 @@ test('a user can be created with a role', function () {
 
     expect($user->name)->toBe('Jane Doe')
         ->and($user->hasRole(RoleEnum::ADMIN->value))->toBeTrue()
-        ->and(Hash::check('password123', $user->password))->toBeTrue();
+        ->and(Hash::check('Password123!', $user->password))->toBeTrue();
 });
 
 test('creating a user validates required fields', function () {
@@ -72,7 +72,7 @@ test('the email must be unique', function () {
         ->post(route('admin.users.store'), [
             'name' => 'Dupe',
             'email' => 'taken@example.com',
-            'password' => 'password123',
+            'password' => 'Password123!',
         ])
         ->assertSessionHasErrors('email');
 });

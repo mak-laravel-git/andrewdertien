@@ -6,6 +6,7 @@ use App\Enums\RoleEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class StoreUserRequest extends FormRequest
 {
@@ -27,7 +28,7 @@ class StoreUserRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'password' => 'required|min:8',
+            'password' => ['required', 'string', Password::default()],
             'avatar' => 'nullable|image|max:2048',
             'remove_avatar' => 'nullable|boolean',
             'roles' => ['nullable', 'array', 'max:1'],

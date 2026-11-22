@@ -25,7 +25,7 @@ test('the removed super-admin role cannot be assigned', function () {
         ->post(route('admin.users.store'), [
             'name' => 'Sneaky',
             'email' => 'sneaky@example.com',
-            'password' => 'password123',
+            'password' => 'Password123!',
             'roles' => ['super-admin'],
         ])
         ->assertSessionHasErrors('roles.0');
@@ -38,7 +38,7 @@ test('an admin can make another user an admin', function () {
         ->post(route('admin.users.store'), [
             'name' => 'New Admin',
             'email' => 'newadmin@example.com',
-            'password' => 'password123',
+            'password' => 'Password123!',
             'roles' => [RoleEnum::ADMIN->value],
         ])
         ->assertRedirect(route('admin.users.index'));

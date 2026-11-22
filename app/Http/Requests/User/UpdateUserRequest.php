@@ -8,6 +8,7 @@ use App\Support\LastAdmin;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\Validator;
 
 class UpdateUserRequest extends FormRequest
@@ -27,7 +28,7 @@ class UpdateUserRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,'.$this->route('user')->id,
-            'password' => 'nullable|min:8',
+            'password' => ['nullable', 'string', Password::default()],
             'avatar' => 'nullable|image|max:2048',
             'remove_avatar' => 'nullable|boolean',
             'roles' => ['nullable', 'array', 'max:1'],

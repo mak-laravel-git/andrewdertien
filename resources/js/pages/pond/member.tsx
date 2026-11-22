@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, Coffee, Gift, Heart, MapPin, MessageCircle, Mountain, Settings2, ShieldCheck, Smile } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Coffee, Gift, Heart, MapPin, Mountain, Settings2, ShieldCheck, Smile } from 'lucide-react';
 import { useState } from 'react';
 import type { MemberProfile } from '@/components/pond/data';
 import { InterestIcon, interestTone } from '@/components/pond/interests';
@@ -152,9 +152,6 @@ export default function Member({ member, isOwnProfile, canSendSparkBall }: Props
                                     <Heart size={18} /> Send a Spark Ball
                                 </button>
                             )}
-                            <Link href="/preview/messages" className="pp-action">
-                                <MessageCircle size={18} /> Send a message
-                            </Link>
                             <Link href={explore()} className="pp-action">
                                 <ArrowLeft size={18} /> Back to the Pond
                             </Link>
