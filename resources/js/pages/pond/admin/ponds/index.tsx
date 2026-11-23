@@ -74,10 +74,10 @@ export default function AdminPondsIndex({ ponds, filters }: Props) {
                                             Category
                                         </th>
                                         <th scope="col" className="pd-num">
-                                            Price
+                                            Suggested
                                         </th>
                                         <th scope="col" className="pd-num">
-                                            Sold
+                                            Tossed
                                         </th>
                                         <th scope="col">For members</th>
                                         <th scope="col">On website</th>
