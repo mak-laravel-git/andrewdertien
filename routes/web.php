@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PondController as AdminPondController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\BallOfferController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FileUploadDemoController;
 use App\Http\Controllers\Member\CheckoutController;
@@ -20,12 +21,20 @@ use App\Http\Controllers\PondCatalogController;
 use App\Http\Controllers\PostAttachmentController;
 use App\Http\Controllers\SplashController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\TossController;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PondCatalogController::class, 'home'])->name('home');
 Route::get('ponds', [PondCatalogController::class, 'index'])->name('ponds.index');
 Route::get('ponds/{pond:slug}', [PondCatalogController::class, 'show'])->name('ponds.show');
+
+// "Toss James a Ball": sign up first if needed, then land on that person's profile.
+Route::get('toss/{username}', TossController::class)->name('toss');
+
+// "Make Me an Offer" on The Deep End.
+Route::post('deep-end/offers', [BallOfferController::class, 'store'])->name('ball-offers.store')
+    ->middleware('throttle:5,1');
 
 // Step 2 of sign-up ("Make a Splash!"): new members land here straight after registering.
 Route::middleware('auth')->prefix('welcome')->name('splash.')->controller(SplashController::class)->group(function () {
@@ -39,7 +48,7 @@ Route::post('webhooks/stripe', StripeWebhookController::class)->name('webhooks.s
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
-    // ── Member: choosing and buying ponds ────────────────────────────────────
+    // ── Member: browsing balls and tossing them ────────────────────────────────────
     Route::prefix('dashboard')->name('member.')->group(function () {
         Route::get('ponds', [MemberPondController::class, 'index'])->name('ponds.index')
             ->middleware('permission:'.PermissionEnum::MEMBER_PONDS_VIEW->value);

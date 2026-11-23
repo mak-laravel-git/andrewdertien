@@ -59,7 +59,7 @@ export default function UsersIndex({ users: paginated, roles, filters, adminCoun
                 <div>
                     <span className="pond-page-kicker">ASK UPON A POND</span>
                     <h1>Members</h1>
-                    <p>Everyone in the Pond, what they own and what they have spent.</p>
+                    <p>Everyone in the Pond, the balls they have tossed and what they have given.</p>
                 </div>
                 {can(PERMISSIONS.USERS.CREATE) && (
                     <Link href={users.create()} className="pond-btn pond-btn-primary">
@@ -71,7 +71,7 @@ export default function UsersIndex({ users: paginated, roles, filters, adminCoun
             <div className="pd-stats pd-stats-3">
                 <StatTile icon={UsersRound} label="Total accounts" value={String(stats.total)} />
                 <StatTile icon={UserCheck} label="Verified" value={String(stats.verified)} tone="green" />
-                <StatTile icon={ShoppingBag} label="Own a pond" value={String(stats.buyers)} tone="pink" />
+                <StatTile icon={ShoppingBag} label="Have tossed a ball" value={String(stats.buyers)} tone="pink" />
             </div>
 
             <div className="pd-toolbar">
@@ -143,7 +143,7 @@ export default function UsersIndex({ users: paginated, roles, filters, adminCoun
                                             <td className="pd-hide-mobile">
                                                 <span className={`pd-pond-count ${pondsOwned ? 'has-ponds' : ''}`}>
                                                     <Gem size={13} aria-hidden="true" />
-                                                    {pondsOwned ? `${pondsOwned} ${pondsOwned === 1 ? 'pond' : 'ponds'}` : 'None yet'}
+                                                    {pondsOwned ? `${pondsOwned} ${pondsOwned === 1 ? 'ball' : 'balls'}` : 'None yet'}
                                                 </span>
                                             </td>
                                             <td className="pd-num pd-hide-mobile">

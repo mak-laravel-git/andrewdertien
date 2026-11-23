@@ -45,21 +45,21 @@ export default function AdminPondsIndex({ ponds, filters }: Props) {
 
     return (
         <>
-            <Head title="Ponds" />
+            <Head title="Balls" />
             <PondShell
-                page="Ponds"
-                subheading="Create ponds, and choose what members and the public website can see."
+                page="Balls"
+                subheading="Create balls, and choose what members and the public website can see."
                 demo={false}
                 action={
                     <Link href={adminPonds.create()} className="pond-btn pond-btn-primary">
-                        <Plus size={17} /> New pond
+                        <Plus size={17} /> New ball
                     </Link>
                 }
             >
                 <div className="pd-toolbar">
                     <div className="pond-inline-search">
                         <Search size={18} />
-                        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search ponds..." aria-label="Search ponds" />
+                        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search balls..." aria-label="Search balls" />
                     </div>
                 </div>
 
@@ -69,7 +69,7 @@ export default function AdminPondsIndex({ ponds, filters }: Props) {
                             <table className="pd-table">
                                 <thead>
                                     <tr>
-                                        <th scope="col">Pond</th>
+                                        <th scope="col">Ball</th>
                                         <th scope="col" className="pd-wide-only">
                                             Category
                                         </th>
@@ -128,16 +128,16 @@ export default function AdminPondsIndex({ ponds, filters }: Props) {
                             </table>
                         </div>
                     ) : (
-                        <EmptyState icon={<Waves size={25} />} title="No ponds found" body="Create a pond and it will appear here." />
+                        <EmptyState icon={<Waves size={25} />} title="No balls found" body="Create a ball and it will appear here." />
                     )}
-                    <Pagination page={ponds} label="Pond pages" />
+                    <Pagination page={ponds} label="Ball pages" />
                 </section>
 
                 {deleting && (
-                    <Modal title={`Delete ${deleting.name}?`} subtitle="It disappears from the website and can no longer be bought. Members who already own it, and all payment records, are kept." onClose={() => setDeleting(null)}>
+                    <Modal title={`Delete ${deleting.name}?`} subtitle="It disappears from the website and can no longer be tossed. Everything already tossed, and all payment records, are kept." onClose={() => setDeleting(null)}>
                         <div className="pd-modal-actions">
                             <button className="pond-btn pond-btn-outline-dark" onClick={() => setDeleting(null)}>
-                                Keep pond
+                                Keep ball
                             </button>
                             <button
                                 className="pond-btn pd-btn-danger"
@@ -146,7 +146,7 @@ export default function AdminPondsIndex({ ponds, filters }: Props) {
                                     setDeleting(null);
                                 }}
                             >
-                                <Trash2 size={16} /> Delete pond
+                                <Trash2 size={16} /> Delete ball
                             </button>
                         </div>
                     </Modal>

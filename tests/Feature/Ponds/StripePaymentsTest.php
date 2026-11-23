@@ -127,7 +127,7 @@ test('visiting the return link without paying does not grant the pond', function
         ->assertRedirect(route('member.payments.index'));
 
     expect($purchase->fresh()->isPending())->toBeTrue()
-        ->and($this->member->ownsPond($this->pond))->toBeFalse();
+        ->and($this->member->hasTossed($this->pond))->toBeFalse();
 });
 
 test('the webhook records a payment even if the buyer never returns', function () {
@@ -213,7 +213,7 @@ test('a full refund made in the Stripe dashboard takes the pond back, a partial 
 
     postStripeWebhook(['type' => 'charge.refunded', 'data' => ['object' => ['payment_intent' => 'pi_1', 'refunded' => true]]])->assertNoContent();
     expect($purchase->fresh()->status)->toBe(PurchaseStatus::REFUNDED)
-        ->and($this->member->ownsPond($this->pond))->toBeFalse();
+        ->and($this->member->hasTossed($this->pond))->toBeFalse();
 });
 
 test('an admin can refund a paid purchase through Stripe', function () {

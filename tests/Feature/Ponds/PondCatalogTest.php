@@ -2,7 +2,6 @@
 
 use App\Enums\RoleEnum;
 use App\Models\Pond;
-use App\Models\PondPurchase;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -45,7 +44,7 @@ test('a pond page is public while the pond is on the website', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('pond/ponds/show')
             ->where('pond.slug', $pond->slug)
-            ->where('isOwned', false)
+            ->missing('isOwned')
         );
 });
 
@@ -60,12 +59,13 @@ test('hidden, draft and deleted ponds have no public page', function () {
     $this->get(route('ponds.show', $deleted->slug))->assertNotFound();
 });
 
-test('a pond page tells an owner they own it', function () {
-    $purchase = PondPurchase::factory()->paid()->create();
+test('public ball cards offer suggested amounts and never a fixed price to pay', function () {
+    $pond = Pond::factory()->create(['price_cents' => 2500]);
 
-    $this->actingAs($purchase->user)
-        ->get(route('ponds.show', $purchase->pond->slug))
-        ->assertInertia(fn (Assert $page) => $page->where('isOwned', true));
+    $this->get(route('ponds.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('ponds.0.suggested_amounts', [500, 2000, 2500, 5000, 10000])
+        ->where('ponds.0.price_cents', 2500)
+    );
 });
 
 test('members can choose published ponds that are hidden from the website, but not drafts', function () {

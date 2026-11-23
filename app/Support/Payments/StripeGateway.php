@@ -43,7 +43,11 @@ class StripeGateway implements PaymentGateway
                         'price_data' => [
                             'currency' => $purchase->currency,
                             'unit_amount' => $purchase->amount_cents,
-                            'product_data' => ['name' => $purchase->pond_name],
+                            'product_data' => [
+                                'name' => $purchase->recipient_name
+                                    ? "{$purchase->pond_name} for {$purchase->recipient_name}"
+                                    : $purchase->pond_name,
+                            ],
                         ],
                     ]],
                     'metadata' => ['purchase_reference' => $purchase->reference],

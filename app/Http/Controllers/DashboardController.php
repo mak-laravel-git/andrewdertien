@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\PurchaseStatus;
 use App\Models\Pond;
-use App\Models\PondPurchase;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -24,20 +24,30 @@ class DashboardController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
+        // Someone who came to toss a ball to a particular person finishes that first.
+        if ($username = TossController::pullChosenMember($request)) {
+            return redirect()->route('members.show', ['user' => $username, 'toss' => 1]);
+        }
+
         $paid = $user->pondPurchases()->where('status', PurchaseStatus::PAID);
-        $ownedPondIds = (clone $paid)->pluck('pond_id');
+
+        $asks = User::query()
+            ->discoverable()
+            ->whereKeyNot($user->id)
+            ->where(fn ($query) => $query
+                ->where(fn ($ask) => $ask->whereNotNull('dreams')->where('dreams', '!=', ''))
+                ->orWhere(fn ($ask) => $ask->whereNotNull('treats')->where('treats', '!=', '')));
 
         return Inertia::render('pond/member/dashboard', [
             'stats' => [
-                'owned' => $ownedPondIds->count(),
-                'spent_cents' => (int) (clone $paid)->sum('amount_cents'),
-                'payments' => $user->pondPurchases()->count(),
-                'available' => Pond::query()->published()->whereNotIn('id', $ownedPondIds)->count(),
+                'collected' => $user->receivedPurchases()->where('status', PurchaseStatus::PAID)->count(),
+                'asks' => (clone $asks)->count(),
+                'given_cents' => (int) (clone $paid)->sum('amount_cents'),
+                'completed_payments' => (clone $paid)->count(),
             ],
             'currency' => config('payments.currency'),
-            'recentPayments' => $user->pondPurchases()->with('pond')->latest('id')->limit(5)->get()
-                ->map(fn (PondPurchase $purchase): array => $purchase->toHistoryRow()),
-            'suggestedPonds' => Pond::query()->published()->whereNotIn('id', $ownedPondIds)->ordered()->limit(3)->get()->map->toCard(),
+            'asks' => $asks->inRandomOrder()->limit(3)->get()->map->toRecipient(),
+            'balls' => Pond::query()->published()->ordered()->get()->map->toCard(),
         ]);
     }
 }

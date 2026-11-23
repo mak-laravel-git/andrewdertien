@@ -149,14 +149,54 @@ class User extends Authenticatable
     }
 
     /**
-     * A member owns a pond while they have a paid purchase of it.
+     * Whether this member has a paid toss of this ball.
      */
-    public function ownsPond(Pond $pond): bool
+    public function hasTossed(Pond $pond): bool
     {
         return $this->pondPurchases()
             ->where('pond_id', $pond->id)
             ->where('status', PurchaseStatus::PAID)
             ->exists();
+    }
+
+    /**
+     * What a giver sees about this member while tossing them a ball.
+     *
+     * @return array{id: int, name: string, username: string|null, avatar_url: string|null, ask: string|null}
+     */
+    public function toRecipient(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'username' => $this->username,
+            'avatar_url' => $this->avatarUrl(),
+            'ask' => $this->mainAsk(),
+        ];
+    }
+
+    /**
+     * Balls other members have tossed to this member.
+     *
+     * @return HasMany<PondPurchase, $this>
+     */
+    public function receivedPurchases(): HasMany
+    {
+        return $this->hasMany(PondPurchase::class, 'recipient_id');
+    }
+
+    /**
+     * The one thing this member is asking for, shown on their card: their dream, otherwise something smaller.
+     */
+    public function mainAsk(): ?string
+    {
+        foreach (['dreams', 'treats', 'fun', 'boost'] as $field) {
+            if (filled($this->{$field})) {
+                return $this->{$field};
+            }
+        }
+
+        return null;
     }
 
     /**

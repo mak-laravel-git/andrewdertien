@@ -110,6 +110,18 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Offers inbox
+    |--------------------------------------------------------------------------
+    |
+    | Where "Make Me an Offer" messages from The Deep End are emailed. When it is
+    | not set they go to the first administrator's email address.
+    |
+    */
+
+    'offers_to' => env('OFFERS_EMAIL'),
+
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),

@@ -20,11 +20,12 @@ class PondCheckout
     public function __construct(private PaymentGatewayManager $gateways) {}
 
     /**
-     * Open a checkout for this member and return the URL to send them to.
+     * Open a checkout for this member and return the URL to send them to. Without an
+     * amount the ball's suggested amount is used; a ball can be tossed again and again.
      *
      * @throws PaymentGatewayException
      */
-    public function start(User $user, Pond $pond): string
+    public function start(User $user, Pond $pond, ?int $amountCents = null, ?User $recipient = null): string
     {
         $lock = Cache::lock("pond-checkout:{$user->id}:{$pond->id}", 30);
 
@@ -35,11 +36,7 @@ class PondCheckout
         try {
             $this->closeOpenCheckouts($user, $pond);
 
-            if ($user->ownsPond($pond)) {
-                throw new PaymentGatewayException('You already own this pond.');
-            }
-
-            return $this->openCheckout($user, $pond);
+            return $this->openCheckout($user, $pond, $amountCents ?? $pond->price_cents, $recipient);
         } finally {
             $lock->release();
         }
@@ -146,16 +143,18 @@ class PondCheckout
     /**
      * @throws PaymentGatewayException
      */
-    private function openCheckout(User $user, Pond $pond): string
+    private function openCheckout(User $user, Pond $pond, int $amountCents, ?User $recipient): string
     {
         $gateway = $this->gateways->active();
 
         $purchase = $user->pondPurchases()->create([
             'pond_id' => $pond->id,
+            'recipient_id' => $recipient?->id,
             'buyer_name' => $user->name,
             'buyer_email' => $user->email,
+            'recipient_name' => $recipient?->name,
             'pond_name' => $pond->name,
-            'amount_cents' => $pond->price_cents,
+            'amount_cents' => $amountCents,
             'currency' => config('payments.currency'),
             'status' => PurchaseStatus::PENDING,
             'gateway' => $gateway->name(),

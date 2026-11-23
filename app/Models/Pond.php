@@ -25,6 +25,18 @@ class Pond extends Model
 
     public const DEFAULT_ARTWORK = 'golf-blue';
 
+    /** Any ball can be any amount from a dollar. */
+    public const MINIMUM_AMOUNT_CENTS = 100;
+
+    public const MAXIMUM_AMOUNT_CENTS = 1_000_000;
+
+    /**
+     * The amounts offered at checkout, in cents. A ball's own price is marked as the suggested one.
+     *
+     * @var list<int>
+     */
+    public const SUGGESTED_AMOUNTS_CENTS = [500, 2000, 5000, 10000];
+
     /**
      * Golf ball artwork in public/askupon/balls.
      *
@@ -125,9 +137,24 @@ class Pond extends Model
     }
 
     /**
-     * The fields shown wherever a pond appears as a card.
+     * The amounts a giver can pick from at checkout, smallest first, always including this ball's suggested amount.
      *
-     * @return array{id: int, name: string, slug: string, tagline: string|null, description: string|null, category: string, category_label: string, price_cents: int, currency: string, image_url: string}
+     * @return list<int>
+     */
+    public function suggestedAmounts(): array
+    {
+        return collect([...self::SUGGESTED_AMOUNTS_CENTS, $this->price_cents])
+            ->filter(fn (int $cents): bool => $cents >= self::MINIMUM_AMOUNT_CENTS)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * The fields shown wherever a ball appears as a card. price_cents is its suggested amount.
+     *
+     * @return array{id: int, name: string, slug: string, tagline: string|null, description: string|null, category: string, category_label: string, price_cents: int, suggested_amounts: list<int>, currency: string, image_url: string}
      */
     public function toCard(): array
     {
@@ -140,6 +167,7 @@ class Pond extends Model
             'category' => $this->category->value,
             'category_label' => $this->category->label(),
             'price_cents' => $this->price_cents,
+            'suggested_amounts' => $this->suggestedAmounts(),
             'currency' => config('payments.currency'),
             'image_url' => $this->imageUrl(),
         ];

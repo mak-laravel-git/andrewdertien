@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pond;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Features;
 
 /**
- * The public website: only ponds the admin has chosen to show appear here.
+ * The public website: only balls the admin has chosen to show appear here.
  */
 class PondCatalogController extends Controller
 {
@@ -27,13 +26,12 @@ class PondCatalogController extends Controller
         ]);
     }
 
-    public function show(Request $request, Pond $pond): Response
+    public function show(Pond $pond): Response
     {
         abort_unless($pond->is_published && $pond->show_on_frontend, 404);
 
         return Inertia::render('pond/ponds/show', [
             'pond' => $pond->toCard(),
-            'isOwned' => (bool) $request->user()?->ownsPond($pond),
         ]);
     }
 }

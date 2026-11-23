@@ -124,7 +124,7 @@ export default function AdminPayments({
             <Head title="Purchases & payments" />
             <PondShell
                 page="Purchases & payments"
-                subheading="Who bought which pond, and every payment behind it."
+                subheading="Who tossed which ball, and every payment behind it."
                 demo={false}
             >
                 <div className="pd-stats pd-stats-3">
@@ -153,7 +153,7 @@ export default function AdminPayments({
                         <input
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Search member, pond or reference..."
+                            placeholder="Search member, ball or reference..."
                             aria-label="Search payments"
                         />
                     </div>
@@ -180,9 +180,9 @@ export default function AdminPayments({
                                 pond: Number(event.target.value) || null,
                             })
                         }
-                        aria-label="Filter by pond"
+                        aria-label="Filter by ball"
                     >
-                        <option value="">All ponds</option>
+                        <option value="">All balls</option>
                         {ponds.map((pond) => (
                             <option key={pond.id} value={pond.id}>
                                 {pond.name}
@@ -365,7 +365,7 @@ export default function AdminPayments({
                 {refunding && (
                     <Modal
                         title={`Refund ${formatMoney(refunding.amount_cents, refunding.currency)}?`}
-                        subtitle={`${refunding.buyer_name} gets the full amount back and stops owning ${refunding.pond_name}. This cannot be undone.`}
+                        subtitle={`${refunding.buyer_name} gets the full amount back for ${refunding.pond_name}. This cannot be undone.`}
                         onClose={() => setRefunding(null)}
                     >
                         <div className="pd-modal-actions">

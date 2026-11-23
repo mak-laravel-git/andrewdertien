@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, Check, Settings2 } from 'lucide-react';
-import { formatMoney, PondArt } from '@/components/pond/commerce';
+import { ArrowLeft, ArrowRight, Settings2 } from 'lucide-react';
+import { PondArt } from '@/components/pond/commerce';
 import type { PondCard } from '@/components/pond/commerce';
 import { PublicShell } from '@/components/pond/public-shell';
 import { register } from '@/routes';
@@ -8,7 +8,7 @@ import adminPonds from '@/routes/admin/ponds';
 import memberPonds from '@/routes/member/ponds';
 import { index } from '@/routes/ponds';
 
-export default function PondShow({ pond, isOwned }: { pond: PondCard; isOwned: boolean }) {
+export default function PondShow({ pond }: { pond: PondCard }) {
     const { auth } = usePage().props;
     const user = auth?.user;
 
@@ -17,7 +17,7 @@ export default function PondShow({ pond, isOwned }: { pond: PondCard; isOwned: b
             <Head title={pond.name} />
             <PublicShell title={pond.name} intro={pond.tagline ?? undefined}>
                 <Link href={index()} className="pd-back">
-                    <ArrowLeft size={16} /> All ponds
+                    <ArrowLeft size={16} /> All balls
                 </Link>
                 <article className="pd-pond-detail">
                     <PondArt pond={pond} />
@@ -25,24 +25,20 @@ export default function PondShow({ pond, isOwned }: { pond: PondCard; isOwned: b
                         <span className={`pd-category pd-category-${pond.category}`}>{pond.category_label}</span>
                         {pond.description && <p>{pond.description}</p>}
                         <div className="pd-summary">
-                            <span>One-time payment</span>
-                            <strong>{formatMoney(pond.price_cents, pond.currency)}</strong>
+                            <span>Choose your amount at checkout</span>
+                            <strong>From $1</strong>
                         </div>
-                        {isOwned ? (
-                            <span className="pd-owned">
-                                <Check size={15} /> You own this pond
-                            </span>
-                        ) : user?.is_admin ? (
+                        {user?.is_admin ? (
                             <Link href={adminPonds.index()} className="askupon-btn askupon-btn-navy askupon-btn-lg">
-                                <Settings2 size={18} /> Manage ponds
+                                <Settings2 size={18} /> Manage balls
                             </Link>
                         ) : user ? (
                             <Link href={memberPonds.index()} className="askupon-btn askupon-btn-pink askupon-btn-lg">
-                                Choose this pond <ArrowRight size={18} />
+                                Toss this ball <ArrowRight size={18} />
                             </Link>
                         ) : (
                             <Link href={register()} className="askupon-btn askupon-btn-pink askupon-btn-lg">
-                                Join the Pond to choose it <ArrowRight size={18} />
+                                Join the Pond to toss one <ArrowRight size={18} />
                             </Link>
                         )}
                     </div>

@@ -1,54 +1,76 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowRight, Check, Gem } from 'lucide-react';
+import { ArrowRight, Gem } from 'lucide-react';
 import { formatDate, formatMoney, PondArt } from '@/components/pond/commerce';
 import type { PaymentRow, PondCard } from '@/components/pond/commerce';
 import { EmptyState, PondShell } from '@/components/pond/ui';
 import memberPonds from '@/routes/member/ponds';
 
+type BallRow = PaymentRow & { pond: PondCard };
+
 type Props = {
-    purchases: (PaymentRow & { pond: PondCard })[];
+    tossed: BallRow[];
+    collected: BallRow[];
 };
 
-export default function MyPonds({ purchases }: Props) {
+function BallCards({ rows, caption }: { rows: BallRow[]; caption: (row: BallRow) => string }) {
+    return (
+        <div className="pd-pond-grid">
+            {rows.map((row) => (
+                <article className="pd-pond-card" key={row.reference}>
+                    <PondArt pond={row.pond} />
+                    <div className="pd-pond-card-body">
+                        <span className={`pd-category pd-category-${row.pond.category}`}>{row.pond.category_label}</span>
+                        <h3>{row.pond_name}</h3>
+                        <div className="pd-pond-card-foot">
+                            <small>{caption(row)}</small>
+                            <strong>{formatMoney(row.amount_cents, row.currency)}</strong>
+                        </div>
+                    </div>
+                </article>
+            ))}
+        </div>
+    );
+}
+
+export default function MyBalls({ tossed, collected }: Props) {
     return (
         <>
-            <Head title="My ponds" />
+            <Head title="My Balls" />
             <PondShell
-                page="My ponds"
-                subheading="Every pond you have made yours."
+                page="My Balls"
+                subheading="The balls you have collected, and the ones you have tossed."
                 demo={false}
                 action={
                     <Link href={memberPonds.index()} className="pond-btn pond-btn-primary">
-                        Choose another <ArrowRight size={16} />
+                        Toss another <ArrowRight size={16} />
                     </Link>
                 }
             >
-                {purchases.length ? (
-                    <div className="pd-pond-grid">
-                        {purchases.map((purchase) => (
-                            <article className="pd-pond-card" key={purchase.reference}>
-                                <PondArt pond={purchase.pond} />
-                                <div className="pd-pond-card-body">
-                                    <span className={`pd-category pd-category-${purchase.pond.category}`}>{purchase.pond.category_label}</span>
-                                    <h3>{purchase.pond_name}</h3>
-                                    {purchase.pond.tagline && <p>{purchase.pond.tagline}</p>}
-                                    <div className="pd-pond-card-foot">
-                                        <small>
-                                            Bought {formatDate(purchase.paid_at)} for {formatMoney(purchase.amount_cents, purchase.currency)}
-                                        </small>
-                                        <span className="pd-owned">
-                                            <Check size={15} /> Yours
-                                        </span>
-                                    </div>
-                                </div>
-                            </article>
-                        ))}
+                <section className="pd-section">
+                    <div className="pond-panel-header">
+                        <h2>Balls collected</h2>
                     </div>
-                ) : (
-                    <div className="pond-panel">
-                        <EmptyState icon={<Gem size={25} />} title="No ponds yet" body="Choose your first pond and it will live here." />
+                    {collected.length ? (
+                        <BallCards rows={collected} caption={(row) => `From ${row.buyer_name} · ${formatDate(row.paid_at)}`} />
+                    ) : (
+                        <div className="pond-panel">
+                            <EmptyState icon={<Gem size={25} />} title="No balls collected yet" body="When someone tosses you a ball, it will land here." />
+                        </div>
+                    )}
+                </section>
+
+                <section className="pd-section">
+                    <div className="pond-panel-header">
+                        <h2>Balls I&rsquo;ve tossed</h2>
                     </div>
-                )}
+                    {tossed.length ? (
+                        <BallCards rows={tossed} caption={(row) => `${row.recipient_name ? `To ${row.recipient_name}` : 'Into the Pond'} · ${formatDate(row.paid_at)}`} />
+                    ) : (
+                        <div className="pond-panel">
+                            <EmptyState icon={<Gem size={25} />} title="No balls tossed yet" body="Choose a ball and toss it to someone, and it will be listed here." />
+                        </div>
+                    )}
+                </section>
             </PondShell>
         </>
     );

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Member\StoreCheckoutRequest;
 use App\Models\Pond;
 use App\Models\PondPurchase;
+use App\Models\User;
 use App\Support\Payments\PaymentGatewayException;
 use App\Support\Payments\PaymentGatewayManager;
 use App\Support\Payments\PondCheckout;
@@ -16,14 +18,16 @@ use Symfony\Component\HttpFoundation\Response;
 class CheckoutController extends Controller
 {
     /**
-     * Send the member to the provider's checkout page for this pond.
+     * Send the member to the provider's checkout page to toss this ball.
      */
-    public function store(Request $request, Pond $pond, PondCheckout $checkout): Response
+    public function store(StoreCheckoutRequest $request, Pond $pond, PondCheckout $checkout): Response
     {
         abort_unless($pond->is_published, 404);
 
+        $recipient = $request->filled('recipient_id') ? User::find($request->integer('recipient_id')) : null;
+
         try {
-            return Inertia::location($checkout->start($request->user(), $pond));
+            return Inertia::location($checkout->start($request->user(), $pond, $request->amountCents(), $recipient));
         } catch (PaymentGatewayException $exception) {
             Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);
 
@@ -50,7 +54,11 @@ class CheckoutController extends Controller
         }
 
         if ($purchase->refresh()->isPaid()) {
-            Inertia::flash('toast', ['type' => 'success', 'message' => "Payment received. {$purchase->pond_name} is yours!"]);
+            $message = $purchase->recipient_name
+                ? "Payment received. Your {$purchase->pond_name} is on its way to {$purchase->recipient_name}!"
+                : "Payment received. Your {$purchase->pond_name} has been tossed into the Pond!";
+
+            Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
 
             return redirect()->route('member.ponds.owned');
         }

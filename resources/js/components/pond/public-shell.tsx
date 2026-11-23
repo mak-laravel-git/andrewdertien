@@ -48,7 +48,7 @@ export function PublicShell({ title, intro, children }: { title: string; intro?:
                 <span>© 2026 Ask Upon A Pond · askuponapond.com</span>
                 <div>
                     <Link href={home()}>Home</Link>
-                    <Link href={pondsIndex()}>The Ponds</Link>
+                    <Link href={pondsIndex()}>Choose a Ball</Link>
                 </div>
             </footer>
         </div>

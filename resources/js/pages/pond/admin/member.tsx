@@ -59,14 +59,14 @@ export default function AdminMember({ member, stats, ownedPonds, payments, curre
                 </section>
 
                 <div className="pd-stats pd-stats-3">
-                    <StatTile icon={Gem} label="Ponds owned" value={String(stats.owned)} />
+                    <StatTile icon={Gem} label="Balls tossed" value={String(stats.owned)} />
                     <StatTile icon={CreditCard} label="Total spent" value={formatMoney(stats.spent_cents, currency)} tone="green" />
                     <StatTile icon={ReceiptText} label="Payment attempts" value={String(stats.payments)} tone="pink" />
                 </div>
 
                 <section className="pond-panel pd-section">
                     <div className="pond-panel-header">
-                        <h2>Ponds owned</h2>
+                        <h2>Balls tossed</h2>
                     </div>
                     {ownedPonds.length ? (
                         <ul className="pd-rank">

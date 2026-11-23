@@ -1,9 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, ArrowRight, Coffee, Gift, Heart, MapPin, Mountain, Settings2, ShieldCheck, Smile } from 'lucide-react';
 import { useState } from 'react';
+import type { PondCard } from '@/components/pond/commerce';
 import type { MemberProfile } from '@/components/pond/data';
 import { InterestIcon, interestTone } from '@/components/pond/interests';
-import { Avatar, GiveModal, hueFor, Modal, PondShell } from '@/components/pond/ui';
+import { TossBallModal } from '@/components/pond/toss-ball';
+import type { Recipient } from '@/components/pond/toss-ball';
+import { Avatar, hueFor, Modal, PondShell } from '@/components/pond/ui';
 import { edit } from '@/routes/member-profile';
 import { index as explore } from '@/routes/members';
 
@@ -11,6 +14,9 @@ type Props = {
     member: MemberProfile;
     isOwnProfile: boolean;
     canSendSparkBall: boolean;
+    recipient: Recipient;
+    balls: PondCard[];
+    openToss: boolean;
 };
 
 /** Optional extra sections, shown only once a member has filled them in. */
@@ -20,8 +26,8 @@ const extraSections = [
     { key: 'about', title: 'A little more about me', lead: '' },
 ] as const;
 
-export default function Member({ member, isOwnProfile, canSendSparkBall }: Props) {
-    const [giving, setGiving] = useState(false);
+export default function Member({ member, isOwnProfile, canSendSparkBall, recipient, balls, openToss }: Props) {
+    const [tossCategory, setTossCategory] = useState<string | null>(openToss ? 'dreams' : null);
     const [sparkInfo, setSparkInfo] = useState(false);
     const firstName = member.name.split(' ')[0];
     const possessive = firstName.endsWith('s') ? `${firstName}’` : `${firstName}’s`;
@@ -115,12 +121,12 @@ export default function Member({ member, isOwnProfile, canSendSparkBall }: Props
 
                             {!isOwnProfile && (
                                 <div className="pp-ctas">
-                                    <button type="button" className="pp-cta pp-cta-dream" onClick={() => setGiving(true)}>
+                                    <button type="button" className="pp-cta pp-cta-dream" onClick={() => setTossCategory('dreams')}>
                                         <img src="/askupon/balls/golf-white.svg" alt="" />
                                         <span>Buy {possessive} dream life a ball</span>
                                         <ArrowRight size={18} />
                                     </button>
-                                    <button type="button" className="pp-cta pp-cta-small" onClick={() => setGiving(true)}>
+                                    <button type="button" className="pp-cta pp-cta-small" onClick={() => setTossCategory('treats')}>
                                         <img src="/askupon/balls/golf-gold.svg" alt="" />
                                         <span>Randomly buy {firstName} one of the small things.</span>
                                         <ArrowRight size={18} />
@@ -144,8 +150,8 @@ export default function Member({ member, isOwnProfile, canSendSparkBall }: Props
 
                     {!isOwnProfile && (
                         <div className="pp-actions">
-                            <button type="button" className="pp-action pp-action-give" onClick={() => setGiving(true)}>
-                                <Gift size={18} /> Give a ball
+                            <button type="button" className="pp-action pp-action-give" onClick={() => setTossCategory('dreams')}>
+                                <Gift size={18} /> Toss {firstName} a Ball
                             </button>
                             {canSendSparkBall && (
                                 <button type="button" className="pp-action" onClick={() => setSparkInfo(true)}>
@@ -159,7 +165,7 @@ export default function Member({ member, isOwnProfile, canSendSparkBall }: Props
                     )}
                 </div>
 
-                {giving && <GiveModal onClose={() => setGiving(false)} member={member.name} />}
+                {tossCategory && <TossBallModal balls={balls} recipient={recipient} initialCategory={tossCategory} onClose={() => setTossCategory(null)} />}
                 {sparkInfo && (
                     <Modal title="Spark Balls are coming soon ✨" subtitle={`${firstName} is open to romantic connections.`} onClose={() => setSparkInfo(false)}>
                         <div className="pond-safety-illustration">

@@ -7,7 +7,7 @@ use App\Models\Pond;
 use Illuminate\Database\Seeder;
 
 /**
- * Starter ponds so a fresh install has something to show. Admins can edit or
+ * Starter balls so a fresh install has something to show. Admins can edit or
  * remove them from the admin dashboard.
  */
 class PondSeeder extends Seeder
@@ -31,10 +31,10 @@ class PondSeeder extends Seeder
     private function ponds(): array
     {
         return [
-            ['name' => 'Dream Pond', 'tagline' => 'Help me make something possible.', 'description' => 'A pond for dreams, goals and aspirations, whether big or small.', 'category' => PondCategory::DREAMS, 'price_cents' => 10000],
-            ['name' => 'Fun Pond', 'tagline' => 'Help support me in enjoying an experience.', 'description' => 'A pond for hobbies, interests and experiences you would love to have.', 'category' => PondCategory::FUN, 'price_cents' => 2000],
-            ['name' => 'Treats Pond', 'tagline' => 'Perhaps a coffee, lunch, or something small.', 'description' => 'A pond for everyday little pleasures, such as coffee, a meal or a gallon of gas.', 'category' => PondCategory::TREATS, 'price_cents' => 500],
-            ['name' => 'Boost Pond', 'tagline' => 'I get by with a little help from my friends.', 'description' => 'A pond for when a little help would make a difference: groceries, transportation, bills.', 'category' => PondCategory::BOOST, 'price_cents' => 5000],
+            ['name' => 'Dream Ball', 'tagline' => 'Help me make something possible.', 'description' => 'A ball for dreams, goals and aspirations, whether big or small.', 'category' => PondCategory::DREAMS, 'price_cents' => 10000],
+            ['name' => 'Fun Ball', 'tagline' => 'Help support me in enjoying an experience.', 'description' => 'A ball for hobbies, interests and experiences you would love to have.', 'category' => PondCategory::FUN, 'price_cents' => 2000],
+            ['name' => 'Treat Ball', 'tagline' => 'Perhaps a coffee, lunch, or something small.', 'description' => 'A ball for everyday little pleasures, such as coffee, a meal or a gallon of gas.', 'category' => PondCategory::TREATS, 'price_cents' => 500],
+            ['name' => 'Boost Ball', 'tagline' => 'I get by with a little help from my friends.', 'description' => 'A ball for when a little help would make a difference: groceries, transportation, bills.', 'category' => PondCategory::BOOST, 'price_cents' => 5000],
         ];
     }
 }

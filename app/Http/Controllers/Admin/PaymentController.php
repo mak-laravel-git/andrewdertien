@@ -74,7 +74,7 @@ class PaymentController extends Controller
             // The byte order mark lets Excel read names with accents correctly.
             fwrite($output, "\xEF\xBB\xBF");
 
-            fputcsv($output, ['Reference', 'Date', 'Paid at', 'Refunded at', 'Pond', 'Member', 'Email', 'Amount', 'Currency', 'Status', 'Mode', 'Gateway', 'Payment ID', 'Note']);
+            fputcsv($output, ['Reference', 'Date', 'Paid at', 'Refunded at', 'Ball', 'Member', 'Email', 'Recipient', 'Amount', 'Currency', 'Status', 'Mode', 'Gateway', 'Payment ID', 'Note']);
 
             $query->chunkById(500, function ($purchases) use ($output): void {
                 foreach ($purchases as $purchase) {
@@ -86,6 +86,7 @@ class PaymentController extends Controller
                         $purchase->pond_name,
                         $purchase->buyer_name,
                         $purchase->buyer_email,
+                        $purchase->recipient_name,
                         number_format($purchase->amount_cents / 100, 2, '.', ''),
                         strtoupper($purchase->currency),
                         $purchase->status->value,

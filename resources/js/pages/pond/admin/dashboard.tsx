@@ -167,14 +167,14 @@ export default function AdminDashboard({
             <Head title="Admin overview" />
             <PondShell
                 page="Admin overview"
-                subheading="Ponds, members and payments at a glance."
+                subheading="Balls, members and payments at a glance."
                 demo={false}
                 action={
                     <Link
                         href={adminPonds.create()}
                         className="pond-btn pond-btn-primary"
                     >
-                        <Plus size={17} /> New pond
+                        <Plus size={17} /> New ball
                     </Link>
                 }
             >
@@ -190,7 +190,7 @@ export default function AdminDashboard({
                     />
                     <StatTile
                         icon={ShoppingBag}
-                        label="Ponds sold"
+                        label="Balls tossed"
                         value={String(stats.purchases)}
                         hint={`${stats.buyers} ${stats.buyers === 1 ? 'buyer' : 'buyers'}`}
                         tone="pink"
@@ -203,7 +203,7 @@ export default function AdminDashboard({
                     />
                     <StatTile
                         icon={Waves}
-                        label="Ponds"
+                        label="Balls"
                         value={String(stats.ponds)}
                         hint={`${stats.ponds_on_frontend} on the website`}
                         tone="green"
@@ -223,7 +223,7 @@ export default function AdminDashboard({
 
                     <section className="pond-panel">
                         <div className="pond-panel-header">
-                            <h2>Top ponds</h2>
+                            <h2>Top balls</h2>
                             <Link href={adminPonds.index()}>
                                 Manage <ArrowRight size={16} />
                             </Link>
@@ -254,8 +254,8 @@ export default function AdminDashboard({
                         ) : (
                             <EmptyState
                                 icon={<Waves size={25} />}
-                                title="No ponds yet"
-                                body="Create your first pond to start selling."
+                                title="No balls yet"
+                                body="Create your first ball to start tossing."
                             />
                         )}
                     </section>
@@ -282,7 +282,7 @@ export default function AdminDashboard({
                         <EmptyState
                             icon={<CreditCard size={25} />}
                             title="No payments yet"
-                            body="Payments appear here as soon as members start buying ponds."
+                            body="Payments appear here as soon as members start tossing balls."
                         />
                     )}
                 </section>

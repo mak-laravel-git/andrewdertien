@@ -40,6 +40,11 @@ class SplashController extends Controller
             'about' => $data['about'] ?? null,
         ]);
 
+        // Back to the person they came to give to, so they can finish the gift.
+        if ($username = TossController::pullChosenMember($request)) {
+            return redirect()->route('members.show', ['user' => $username, 'toss' => 1]);
+        }
+
         return redirect()->route('dashboard');
     }
 }

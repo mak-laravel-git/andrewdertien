@@ -1,25 +1,33 @@
 import { Head, router } from '@inertiajs/react';
 import { Waves } from 'lucide-react';
+import { useState } from 'react';
 import type { PondCard } from '@/components/pond/commerce';
-import { PondChoiceCard } from '@/components/pond/pond-choice-card';
+import { DeepEnd } from '@/components/pond/deep-end';
+import { BallGrid, TossBallModal } from '@/components/pond/toss-ball';
+import type { Recipient } from '@/components/pond/toss-ball';
 import { EmptyState, PondShell } from '@/components/pond/ui';
 import memberPonds from '@/routes/member/ponds';
 
 type Props = {
     ponds: PondCard[];
-    ownedPondIds: number[];
+    recipient: Recipient | null;
     categories: { value: string; label: string }[];
     filters: { category: string };
 };
 
-export default function MemberPonds({ ponds, ownedPondIds, categories, filters }: Props) {
+export default function MemberBalls({ ponds, recipient, categories, filters }: Props) {
+    const [chosen, setChosen] = useState<PondCard | null>(null);
     const chooseCategory = (category: string) =>
-        router.get(memberPonds.index.url({ query: { category: category || undefined } }), {}, { preserveState: true, preserveScroll: true });
+        router.get(memberPonds.index.url({ query: { category: category || undefined, to: recipient?.username || undefined } }), {}, { preserveState: true, preserveScroll: true });
 
     return (
         <>
-            <Head title="Choose a pond" />
-            <PondShell page="Choose a pond" subheading="Six simple ways to give a little support, fun, or love." demo={false}>
+            <Head title="The Balls" />
+            <PondShell
+                page="The Balls"
+                subheading={recipient ? `Choose a ball to toss ${recipient.name}.` : 'Choose a ball, choose an amount, toss it.'}
+                demo={false}
+            >
                 <div className="pond-filter-chips pd-chips" role="group" aria-label="Filter by category">
                     <button className={filters.category === '' ? 'active' : ''} onClick={() => chooseCategory('')}>
                         All
@@ -32,14 +40,14 @@ export default function MemberPonds({ ponds, ownedPondIds, categories, filters }
                 </div>
 
                 {ponds.length ? (
-                    <div className="pd-pond-grid">
-                        {ponds.map((pond) => (
-                            <PondChoiceCard key={pond.id} pond={pond} isOwned={ownedPondIds.includes(pond.id)} />
-                        ))}
-                    </div>
+                    <BallGrid balls={ponds} onChoose={setChosen} />
                 ) : (
-                    <EmptyState icon={<Waves size={25} />} title="No ponds here yet" body="Try another category, or check back soon." />
+                    <EmptyState icon={<Waves size={25} />} title="No balls here yet" body="Try another category, or check back soon." />
                 )}
+
+                <DeepEnd />
+
+                {chosen && <TossBallModal balls={ponds} recipient={recipient} initialBallId={chosen.id} onClose={() => setChosen(null)} />}
             </PondShell>
         </>
     );

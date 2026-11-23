@@ -46,7 +46,7 @@ test('a member can buy a pond end to end', function () {
 
     expect($purchase->fresh()->isPaid())->toBeTrue()
         ->and($purchase->fresh()->paid_at)->not->toBeNull()
-        ->and($this->member->ownsPond($this->pond))->toBeTrue();
+        ->and($this->member->hasTossed($this->pond))->toBeTrue();
 });
 
 test('a declined payment leaves the pond unowned and is in the history', function () {
@@ -58,7 +58,7 @@ test('a declined payment leaves the pond unowned and is in the history', functio
         ->assertRedirect(route('member.payments.index'));
 
     expect($purchase->fresh()->status)->toBe(PurchaseStatus::FAILED)
-        ->and($this->member->ownsPond($this->pond))->toBeFalse();
+        ->and($this->member->hasTossed($this->pond))->toBeFalse();
 
     $this->actingAs($this->member)
         ->get(route('member.payments.index'))
@@ -79,17 +79,18 @@ test('cancelling at checkout does not charge or own anything', function () {
         ->assertRedirect(route('member.ponds.index'));
 
     expect($purchase->fresh()->status)->toBe(PurchaseStatus::CANCELLED)
-        ->and($this->member->ownsPond($this->pond))->toBeFalse();
+        ->and($this->member->hasTossed($this->pond))->toBeFalse();
 });
 
-test('a member cannot buy a pond twice', function () {
+test('a member can toss the same ball again', function () {
     PondPurchase::factory()->paid()->create(['user_id' => $this->member->id, 'pond_id' => $this->pond->id]);
 
     $this->actingAs($this->member)
         ->post(route('member.checkout.store', $this->pond->slug))
-        ->assertRedirect(route('member.ponds.index'));
+        ->assertRedirect();
 
-    expect(PondPurchase::count())->toBe(1);
+    expect(PondPurchase::count())->toBe(2)
+        ->and(PondPurchase::where('status', PurchaseStatus::PENDING)->count())->toBe(1);
 });
 
 test('starting checkout again closes the abandoned one', function () {
@@ -171,30 +172,29 @@ test('the sandbox is refused in production', function () {
         ->and(PondPurchase::count())->toBe(1);
 });
 
-test('a member dashboard shows their own ponds and spending', function () {
-    $purchase = PondPurchase::factory()->paid()->create(['user_id' => $this->member->id, 'pond_id' => $this->pond->id]);
+test('a member dashboard counts only completed payments', function () {
+    PondPurchase::factory()->paid()->create(['user_id' => $this->member->id, 'pond_id' => $this->pond->id]);
+    PondPurchase::factory()->create(['user_id' => $this->member->id, 'pond_id' => $this->pond->id, 'status' => PurchaseStatus::CANCELLED]);
     PondPurchase::factory()->paid()->create();
-    Pond::factory()->create();
 
     $this->actingAs($this->member)
         ->get(route('dashboard'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('pond/member/dashboard')
-            ->where('stats.owned', 1)
-            ->where('stats.spent_cents', 2500)
-            ->where('stats.payments', 1)
-            ->has('recentPayments', 1)
-            ->where('recentPayments.0.reference', $purchase->reference)
-            ->missing('suggestedPonds.5')
+            ->where('stats.given_cents', 2500)
+            ->where('stats.completed_payments', 1)
+            ->where('stats.collected', 0)
+            ->missing('recentPayments')
         );
 
     $this->actingAs($this->member)
         ->get(route('member.ponds.owned'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('pond/member/my-ponds')
-            ->has('purchases', 1)
-            ->where('purchases.0.pond.id', $this->pond->id)
+            ->has('tossed', 1)
+            ->where('tossed.0.pond.id', $this->pond->id)
+            ->has('collected', 0)
         );
 });
 

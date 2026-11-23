@@ -55,8 +55,8 @@ export default function Explore({ members, filters }: Props) {
 
     return (
         <>
-            <Head title="Explore the pond" />
-            <PondShell page="Explore the pond" subheading="Find inspiring people, meaningful dreams, and small joys." demo={false}>
+            <Head title="Explore the Pond" />
+            <PondShell page="Explore the Pond" subheading="Find inspiring people, meaningful dreams, and small joys." demo={false}>
                 <div className="pond-explore-highlight">
                     <div>
                         <SectionEyebrow>THE BEAUTY OF BELONGING</SectionEyebrow>

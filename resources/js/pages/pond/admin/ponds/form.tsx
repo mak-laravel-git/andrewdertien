@@ -43,7 +43,7 @@ export default function AdminPondForm({ pond, categories, artwork, defaultArtwor
         form.submit(pond ? adminPonds.update(pond.id) : adminPonds.store(), { forceFormData: true, preserveScroll: 'errors' });
     };
 
-    const title = pond ? `Edit ${pond.name}` : 'New pond';
+    const title = pond ? `Edit ${pond.name}` : 'New ball';
 
     useEffect(() => {
         return () => {
@@ -86,7 +86,7 @@ export default function AdminPondForm({ pond, categories, artwork, defaultArtwor
                 demo={false}
                 action={
                     <Link href={adminPonds.index()} className="pond-btn pond-btn-outline-dark">
-                        <ArrowLeft size={16} /> All ponds
+                        <ArrowLeft size={16} /> All balls
                     </Link>
                 }
             >
@@ -128,19 +128,19 @@ export default function AdminPondForm({ pond, categories, artwork, defaultArtwor
                             </label>
 
                             <label className="pond-form-label">
-                                Price ({currency.toUpperCase()})
-                                <input className="pond-input" type="number" inputMode="decimal" min="0.50" max="1000000" step="0.01" value={form.data.price} onChange={(event) => form.setData('price', event.target.value)} required />
+                                Suggested amount ({currency.toUpperCase()})
+                                <input className="pond-input" type="number" inputMode="decimal" min="1" max="1000000" step="0.01" value={form.data.price} onChange={(event) => form.setData('price', event.target.value)} required />
                                 <FieldError message={form.errors.price} />
                             </label>
                         </div>
 
                         <fieldset className="pd-ball-picker">
-                            <legend>Pond picture</legend>
+                            <legend>Ball picture</legend>
                             <p className="pd-hint">Choose a golf ball or a marble, or upload your own image (up to 4 MB).</p>
                             <div>
                                 {customImageUrl ? (
                                     <div className="pd-ball-custom is-selected">
-                                        <img src={customImageUrl} alt="Uploaded pond" />
+                                        <img src={customImageUrl} alt="Uploaded ball" />
                                         <button type="button" onClick={() => chooseBall(form.data.ball_art)} aria-label="Remove uploaded image">
                                             <X size={13} />
                                         </button>
@@ -203,7 +203,7 @@ export default function AdminPondForm({ pond, categories, artwork, defaultArtwor
                                 />
                                 <span>
                                     <strong>Show on the website</strong>
-                                    <small>Anyone can see it on the public home and ponds pages.</small>
+                                    <small>Anyone can see it on the public home and balls pages.</small>
                                 </span>
                             </label>
                             <label className="pond-form-label">
@@ -215,7 +215,7 @@ export default function AdminPondForm({ pond, categories, artwork, defaultArtwor
                         </section>
 
                         <button type="submit" className="pond-btn pond-btn-primary pond-wide" disabled={form.processing}>
-                            <Check size={17} /> {form.processing ? 'Saving...' : pond ? 'Save changes' : 'Create pond'}
+                            <Check size={17} /> {form.processing ? 'Saving...' : pond ? 'Save changes' : 'Create ball'}
                         </button>
                     </div>
                 </form>

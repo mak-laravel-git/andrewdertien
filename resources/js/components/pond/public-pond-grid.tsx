@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ArrowUpRight } from 'lucide-react';
-import { formatMoney, PondArt } from '@/components/pond/commerce';
+import { PondArt } from '@/components/pond/commerce';
 import type { PondCard } from '@/components/pond/commerce';
 import { show } from '@/routes/ponds';
 
@@ -15,7 +15,7 @@ export function PublicPondGrid({ ponds }: { ponds: PondCard[] }) {
                         <h3>{pond.name}</h3>
                         {pond.tagline && <p>{pond.tagline}</p>}
                         <div className="pd-pond-card-foot">
-                            <strong>{formatMoney(pond.price_cents, pond.currency)}</strong>
+                            <small>Any amount from $1</small>
                             <span className="pd-more">
                                 View <ArrowUpRight size={15} />
                             </span>

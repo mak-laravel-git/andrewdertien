@@ -12,6 +12,7 @@ export type PondCard = {
     category: string;
     category_label: string;
     price_cents: number;
+    suggested_amounts: number[];
     currency: string;
     image_url: string;
 };
@@ -23,6 +24,9 @@ export type PaymentRow = {
     user_id: number | null;
     buyer_name: string;
     buyer_email: string;
+    recipient_id: number | null;
+    recipient_name: string | null;
+    recipient_username: string | null;
     pond_name: string;
     pond_slug: string | null;
     amount_cents: number;
@@ -131,7 +135,7 @@ export function PaymentsTable({ rows, showBuyer = false, buyerHref, actions }: {
             <table className="pd-table">
                 <thead>
                     <tr>
-                        <th scope="col">Pond</th>
+                        <th scope="col">Ball</th>
                         {showBuyer && <th scope="col">Member</th>}
                         <th scope="col" className="pd-hide-mobile">
                             Date
@@ -158,6 +162,7 @@ export function PaymentsTable({ rows, showBuyer = false, buyerHref, actions }: {
                             <tr key={row.reference}>
                                 <td>
                                     <strong>{row.pond_name}</strong>
+                                    {row.recipient_name && <small>For {row.recipient_name}</small>}
                                     {row.is_test && <span className="pond-mode-badge pond-mode-small" title="Made in test mode: no real money moved">Test</span>}
                                     <small className="pd-show-mobile">{formatDate(row.paid_at ?? row.created_at)}</small>
                                     {row.failure_message && <small>{row.failure_message}</small>}

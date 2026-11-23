@@ -27,7 +27,7 @@ WORKDIR /var/www
 ENV CI=true \
     APP_ENV=production \
     APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
-    VITE_APP_NAME="Quantum Pond" \
+    VITE_APP_NAME="Ask Upon A Pond" \
     DB_CONNECTION=sqlite \
     DB_DATABASE=:memory: \
     TELESCOPE_ENABLED=false \
@@ -48,7 +48,7 @@ RUN npm ci
 
 COPY . .
 
-ARG VITE_APP_NAME="Quantum Pond"
+ARG VITE_APP_NAME="Ask Upon A Pond"
 ARG VITE_ERROR_BOUNDARY_DEBUG=false
 
 ENV VITE_APP_NAME=${VITE_APP_NAME} \

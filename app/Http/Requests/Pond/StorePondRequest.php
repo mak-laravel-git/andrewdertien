@@ -26,7 +26,7 @@ class StorePondRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:2000'],
             'category' => ['required', Rule::enum(PondCategory::class)],
             // Stripe's lowest charge is 50 cents.
-            'price' => ['required', 'numeric', 'min:0.5', 'max:1000000', 'decimal:0,2'],
+            'price' => ['required', 'numeric', 'min:1', 'max:1000000', 'decimal:0,2'],
             'ball_art' => ['required', 'string', Rule::in(array_keys(Pond::artwork()))],
             'image' => ['nullable', 'image', 'max:4096'],
             'remove_image' => ['nullable', 'boolean'],

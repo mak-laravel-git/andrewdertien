@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\Interest;
 use App\Http\Requests\MemberProfile\UpdateAvatarRequest;
 use App\Http\Requests\MemberProfile\UpdateMemberProfileRequest;
+use App\Models\Pond;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +27,9 @@ class MemberProfileController extends Controller
             'member' => $user->toPublicProfile(),
             'isOwnProfile' => $isOwnProfile,
             'canSendSparkBall' => ! $isOwnProfile && $user->isOpenToRomance() && $viewer->isAdult(),
+            'recipient' => $user->toRecipient(),
+            'balls' => Pond::query()->published()->ordered()->get()->map->toCard(),
+            'openToss' => $request->boolean('toss') && ! $isOwnProfile,
         ]);
     }
 

@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 /**
- * One attempt by a member to buy a pond, together with its payment. A pond is
- * owned while the member has a purchase in the "paid" status.
+ * One attempt by a member to toss a ball, together with its payment. A ball
+ * counts once the purchase is in the "paid" status. It can be for a particular
+ * member, who then collects it.
  */
 #[Fillable([
-    'reference', 'user_id', 'pond_id', 'buyer_name', 'buyer_email', 'pond_name', 'amount_cents',
+    'reference', 'user_id', 'recipient_id', 'pond_id', 'buyer_name', 'buyer_email', 'recipient_name', 'pond_name', 'amount_cents',
     'currency', 'status', 'gateway', 'gateway_session_id', 'gateway_payment_id', 'is_test',
     'failure_message', 'paid_at', 'refunded_at',
 ])]
@@ -45,6 +46,16 @@ class PondPurchase extends Model
     }
 
     /**
+     * The member the ball was tossed to, if it was for someone in particular.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function recipient(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recipient_id');
+    }
+
+    /**
      * @return BelongsTo<Pond, $this>
      */
     public function pond(): BelongsTo
@@ -65,7 +76,7 @@ class PondPurchase extends Model
     /**
      * The fields shown on a row of any purchase or payment history.
      *
-     * @return array{reference: string, user_id: int|null, buyer_name: string, buyer_email: string, pond_name: string, pond_slug: string|null, amount_cents: int, currency: string, status: string, gateway: string, is_test: bool, failure_message: string|null, created_at: string|null, paid_at: string|null, refunded_at: string|null}
+     * @return array{reference: string, user_id: int|null, buyer_name: string, buyer_email: string, recipient_id: int|null, recipient_name: string|null, recipient_username: string|null, pond_name: string, pond_slug: string|null, amount_cents: int, currency: string, status: string, gateway: string, is_test: bool, failure_message: string|null, created_at: string|null, paid_at: string|null, refunded_at: string|null}
      */
     public function toHistoryRow(): array
     {
@@ -74,6 +85,9 @@ class PondPurchase extends Model
             'user_id' => $this->user_id,
             'buyer_name' => $this->buyer_name,
             'buyer_email' => $this->buyer_email,
+            'recipient_id' => $this->recipient_id,
+            'recipient_name' => $this->recipient_name,
+            'recipient_username' => $this->recipient?->username,
             'pond_name' => $this->pond_name,
             'pond_slug' => $this->pond?->slug,
             'amount_cents' => $this->amount_cents,

@@ -452,5 +452,5 @@ test('a member is sent to Stripe to pay and is confirmed on return, with no webh
         ->assertRedirect(route('member.ponds.owned'));
 
     expect($purchase->fresh()->isPaid())->toBeTrue()
-        ->and($this->member->ownsPond($pond))->toBeTrue();
+        ->and($this->member->hasTossed($pond))->toBeTrue();
 });

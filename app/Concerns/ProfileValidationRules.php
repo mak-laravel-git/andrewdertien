@@ -26,7 +26,7 @@ trait ProfileValidationRules
     }
 
     /**
-     * Get the validation rules for the member-facing Quantum Pond profile.
+     * Get the validation rules for the member-facing Ask Upon A Pond profile.
      *
      * @return array<string, array<int, ValidationRule|array<mixed>|string|Closure>>
      */

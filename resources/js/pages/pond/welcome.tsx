@@ -4,7 +4,8 @@ import { DuskPondScene, FriendswoodSign } from '@/components/pond/dusk-scene';
 import { useScrollReveal } from '@/components/pond/pond-motion';
 import { PublicNavActions } from '@/components/pond/public-shell';
 import { Brand, PondMark } from '@/components/pond/ui';
-import { dashboard, register } from '@/routes';
+import { dashboard, register, toss } from '@/routes';
+import { index as exploreMembers } from '@/routes/members';
 import { index as pondsIndex } from '@/routes/ponds';
 
 const ballTiles = [
@@ -101,16 +102,24 @@ const actions = [
 const sampleProfiles = [
     {
         name: 'James',
+        username: 'james',
         image: '/askupon/story/james.jpg',
         position: '45% 30%',
         dream: 'Spend my last year of high school outside the city, on a piece of land where I can raise dogs, grow food, and learn to live off the land.',
     },
     {
         name: 'Andrew',
+        username: 'andrew',
         image: null,
         position: '',
         dream: 'Leave San Francisco, build a life on a little land of our own, and help others make things happen along the way.',
     },
+];
+
+const howItWorks = [
+    { title: 'Choose a Ball', ball: 'blue', body: 'Dream, Fun, Treat or Boost. Pick the one that feels right.' },
+    { title: 'Choose an Amount', ball: 'purple', body: 'Any ball can be any amount, starting at a dollar.' },
+    { title: 'Toss It', ball: 'aqua', body: 'Send it their way and watch the ripples spread.' },
 ];
 
 const actionIcons = {
@@ -129,12 +138,12 @@ export default function Welcome() {
     const joinHref = auth?.user ? dashboard() : register();
 
     useScrollReveal(
-        '.hm-tile, .hm-story-card, .hm-muddy-copy, .hm-action, .hm-imagine h2, .hm-profile, .hm-final h2',
+        '.hm-tile, .hm-story-card, .hm-muddy-copy, .hm-action, .hm-imagine h2, .hm-profile, .hm-final h2, .hm-step',
     );
 
     return (
         <div className="pond-home askupon-home hm-page">
-            <Head title="Ask Upon A Pond — Connect. Share your world. Give and receive." />
+            <Head title="Connect. Share your world. Give and receive." />
 
             <section className="hm-hero">
                 <DuskPondScene />
@@ -142,10 +151,10 @@ export default function Welcome() {
                     <nav className="askupon-nav">
                         <Brand dark />
                         <div className="hm-nav-links">
-                            <a href="#explore">Explore the Pond</a>
-                            <a href="#muddy-bottoms">How It Works</a>
+                            <Link href={exploreMembers()}>Explore the Pond</Link>
+                            <a href="#how-it-works">How It Works</a>
                             <a href="#once-upon-a-pond">Our Story</a>
-                            <Link href={pondsIndex()}>Community</Link>
+                            <Link href={pondsIndex()}>The Balls</Link>
                         </div>
                         <div className="askupon-nav-actions">
                             <PublicNavActions />
@@ -158,6 +167,10 @@ export default function Welcome() {
                         Connect. Share your world.{' '}
                         <span>Give and receive.</span>
                     </h1>
+                    <p className="hm-hero-line">
+                        Share something you&rsquo;re dreaming about, or toss
+                        someone a ball to help make their day.
+                    </p>
                     <p>
                         A little Insta. A little Cash App. A little GoFundMe.
                         Even a little Tinder (if you check that box). A whole
@@ -168,7 +181,7 @@ export default function Welcome() {
                             href={pondsIndex()}
                             className="hm-btn hm-btn-explore"
                         >
-                            Explore the Pond <ArrowRight size={18} />
+                            See the Balls <ArrowRight size={18} />
                         </Link>
                         <Link href={joinHref} className="hm-btn hm-btn-join">
                             Join the Pond <ArrowRight size={18} />
@@ -192,6 +205,78 @@ export default function Welcome() {
                             <strong>{tile.title}</strong>
                             {tile.caption && <small>{tile.caption}</small>}
                         </div>
+                    ))}
+                </div>
+            </section>
+
+            <section className="hm-how" id="how-it-works" aria-labelledby="hm-how-title">
+                <h2 id="hm-how-title" className="hm-heading">
+                    <span>How It Works</span>
+                </h2>
+                <p className="hm-subheading">Choose a Ball. Choose an Amount. Toss It.</p>
+                <div className="hm-actions hm-actions-three">
+                    {howItWorks.map((step, index) => (
+                        <article key={step.title} className="hm-action hm-step">
+                            <span className="hm-action-icon">
+                                <img src={golfBall(step.ball)} alt="" />
+                                <b className="hm-step-number">{index + 1}</b>
+                            </span>
+                            <h3>{step.title}</h3>
+                            <p>{step.body}</p>
+                        </article>
+                    ))}
+                </div>
+            </section>
+
+            <section
+                className="hm-profiles"
+                id="dream-life"
+                aria-labelledby="hm-profiles-title"
+            >
+                <h2 id="hm-profiles-title" className="hm-heading">
+                    <span>Dream Life Profiles</span>
+                </h2>
+                <p className="hm-subheading">
+                    See how it works with two real profiles.
+                </p>
+                <div className="hm-profile-grid">
+                    {sampleProfiles.map((profile) => (
+                        <article
+                            key={profile.name}
+                            className="hm-profile"
+                            aria-label={`${profile.name}’s Dream Life profile`}
+                        >
+                            <div className="hm-profile-media">
+                                {profile.image ? (
+                                    <img
+                                        src={profile.image}
+                                        alt={`${profile.name}`}
+                                        style={{
+                                            objectPosition: profile.position,
+                                        }}
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <span aria-hidden="true">
+                                        {profile.name.charAt(0)}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="hm-profile-body">
+                                <span className="hm-profile-tag">
+                                    Dream Life
+                                </span>
+                                <h3>{profile.name}&rsquo;s Dream Life</h3>
+                                <p>&ldquo;{profile.dream}&rdquo;</p>
+                                <Link
+                                    href={toss(profile.username)}
+                                    className="hm-btn hm-btn-purple"
+                                >
+                                    Toss {profile.name} a Ball{' '}
+                                    <ArrowRight size={16} />
+                                </Link>
+                            </div>
+                        </article>
                     ))}
                 </div>
             </section>
@@ -300,59 +385,6 @@ export default function Welcome() {
                 <Link href={joinHref} className="hm-btn hm-btn-purple">
                     Come on in!
                 </Link>
-            </section>
-
-            <section
-                className="hm-profiles"
-                id="dream-life"
-                aria-labelledby="hm-profiles-title"
-            >
-                <h2 id="hm-profiles-title" className="hm-heading">
-                    <span>Dream Life Profiles</span>
-                </h2>
-                <p className="hm-subheading">
-                    See how it works with two real profiles.
-                </p>
-                <div className="hm-profile-grid">
-                    {sampleProfiles.map((profile) => (
-                        <article
-                            key={profile.name}
-                            className="hm-profile"
-                            aria-label={`${profile.name}’s Dream Life profile`}
-                        >
-                            <div className="hm-profile-media">
-                                {profile.image ? (
-                                    <img
-                                        src={profile.image}
-                                        alt={`${profile.name}`}
-                                        style={{
-                                            objectPosition: profile.position,
-                                        }}
-                                        loading="lazy"
-                                    />
-                                ) : (
-                                    <span aria-hidden="true">
-                                        {profile.name.charAt(0)}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="hm-profile-body">
-                                <span className="hm-profile-tag">
-                                    Dream Life
-                                </span>
-                                <h3>{profile.name}&rsquo;s Dream Life</h3>
-                                <p>&ldquo;{profile.dream}&rdquo;</p>
-                                <Link
-                                    href={joinHref}
-                                    className="hm-btn hm-btn-purple"
-                                >
-                                    Toss {profile.name} a Ball{' '}
-                                    <ArrowRight size={16} />
-                                </Link>
-                            </div>
-                        </article>
-                    ))}
-                </div>
             </section>
 
             <section className="hm-final">

@@ -1,27 +1,31 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowRight, ArrowUpRight, CreditCard, Gem, ReceiptText, Waves } from 'lucide-react';
-import { formatMoney, PaymentsTable, StatTile } from '@/components/pond/commerce';
-import type { PaymentRow, PondCard } from '@/components/pond/commerce';
-import { PondChoiceCard } from '@/components/pond/pond-choice-card';
-import { EmptyState, PondShell } from '@/components/pond/ui';
+import { ArrowRight, ArrowUpRight, CreditCard, Gem, HandHeart, ReceiptText, Users } from 'lucide-react';
+import { useState } from 'react';
+import { formatMoney, StatTile } from '@/components/pond/commerce';
+import type { PondCard } from '@/components/pond/commerce';
+import { TossBallModal } from '@/components/pond/toss-ball';
+import type { Recipient } from '@/components/pond/toss-ball';
+import { Avatar, EmptyState, hueFor, PondShell } from '@/components/pond/ui';
 import memberPayments from '@/routes/member/payments';
-import memberPonds from '@/routes/member/ponds';
+import { edit } from '@/routes/member-profile';
+import { index as explore, show } from '@/routes/members';
 
 type Props = {
-    stats: { owned: number; spent_cents: number; payments: number; available: number };
+    stats: { collected: number; asks: number; given_cents: number; completed_payments: number };
     currency: string;
-    recentPayments: PaymentRow[];
-    suggestedPonds: PondCard[];
+    asks: Recipient[];
+    balls: PondCard[];
 };
 
-export default function MemberDashboard({ stats, currency, recentPayments, suggestedPonds }: Props) {
+export default function MemberDashboard({ stats, currency, asks, balls }: Props) {
     const { auth } = usePage().props;
     const firstName = auth.user.name.split(' ')[0];
+    const [tossing, setTossing] = useState<Recipient | null>(null);
 
     return (
         <>
             <Head title="My dashboard" />
-            <PondShell page={`Welcome back, ${firstName}`} subheading="Your ponds and payments, all in one place." demo={false}>
+            <PondShell page={`Welcome back, ${firstName}`} subheading="Your balls and payments, all in one place." demo={false}>
                 <div className="pond-dashboard-hero">
                     <div className="pond-dashboard-hero-text">
                         <span className="pond-hero-label">✦ YOUR LITTLE CORNER OF THE UNIVERSE</span>
@@ -30,13 +34,13 @@ export default function MemberDashboard({ stats, currency, recentPayments, sugge
                             <br />
                             with <em>little ripples.</em>
                         </h2>
-                        <p>Choose a pond that feels right, and keep the balls rolling.</p>
+                        <p>Give a ball, share an ask, and keep the balls rolling.</p>
                         <div>
-                            <Link href={memberPonds.index()} className="pond-btn pond-btn-light">
-                                Choose a pond <ArrowRight size={16} />
+                            <Link href={explore()} className="pond-btn pond-btn-light">
+                                Explore the Pond <ArrowRight size={16} />
                             </Link>
-                            <Link href={memberPonds.owned()} className="pond-btn-ghost-white">
-                                My ponds <ArrowUpRight size={16} />
+                            <Link href={edit()} className="pond-btn-ghost-white">
+                                Share an Ask <ArrowUpRight size={16} />
                             </Link>
                         </div>
                     </div>
@@ -46,37 +50,56 @@ export default function MemberDashboard({ stats, currency, recentPayments, sugge
                 </div>
 
                 <div className="pd-stats">
-                    <StatTile icon={Gem} label="Ponds owned" value={String(stats.owned)} />
-                    <StatTile icon={Waves} label="Ponds to explore" value={String(stats.available)} tone="green" />
-                    <StatTile icon={CreditCard} label="Total spent" value={formatMoney(stats.spent_cents, currency)} tone="pink" />
-                    <StatTile icon={ReceiptText} label="Payments" value={String(stats.payments)} />
+                    <StatTile icon={Gem} label="Balls collected" value={String(stats.collected)} />
+                    <StatTile icon={Users} label="Asks to explore" value={String(stats.asks)} tone="green" />
+                    <StatTile icon={CreditCard} label="Total given" value={formatMoney(stats.given_cents, currency)} tone="pink" />
+                    <StatTile icon={ReceiptText} label="Completed payments" value={String(stats.completed_payments)} />
                 </div>
+                <p className="tb-history-link">
+                    Payment details live in <Link href={memberPayments.index()}>Payment History</Link>.
+                </p>
 
-                {suggestedPonds.length > 0 && (
-                    <section className="pd-section">
-                        <div className="pond-panel-header">
-                            <h2>Ponds for you</h2>
-                            <Link href={memberPonds.index()}>
-                                See all <ArrowRight size={16} />
-                            </Link>
-                        </div>
-                        <div className="pd-pond-grid">
-                            {suggestedPonds.map((pond) => (
-                                <PondChoiceCard key={pond.id} pond={pond} />
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                <section className="pond-panel pd-section">
+                <section className="pd-section">
                     <div className="pond-panel-header">
-                        <h2>Latest payments</h2>
-                        <Link href={memberPayments.index()}>
-                            Full history <ArrowRight size={16} />
+                        <h2>Asks from the Pond</h2>
+                        <Link href={explore()}>
+                            See everyone <ArrowRight size={16} />
                         </Link>
                     </div>
-                    {recentPayments.length ? <PaymentsTable rows={recentPayments} /> : <EmptyState icon={<CreditCard size={25} />} title="No payments yet" body="When you buy a pond, your payment shows up here." />}
+                    {asks.length ? (
+                        <div className="pd-pond-grid">
+                            {asks.map((member) => (
+                                <article className="pd-pond-card tb-ask" key={member.id}>
+                                    <div className="pd-pond-card-body">
+                                        <div className="tb-ask-head">
+                                            <Avatar name={member.name} hue={hueFor(member.id)} size="avatar-small" src={member.avatar_url} />
+                                            {member.username ? (
+                                                <Link href={show(member.username)} className="pd-link">
+                                                    <strong>{member.name}</strong>
+                                                </Link>
+                                            ) : (
+                                                <strong>{member.name}</strong>
+                                            )}
+                                        </div>
+                                        <p className="tb-ask-text">&ldquo;{member.ask}&rdquo;</p>
+                                        <div className="pd-pond-card-foot">
+                                            <span />
+                                            <button className="pond-btn pond-btn-primary pd-btn-small" onClick={() => setTossing(member)}>
+                                                Toss a Ball <ArrowRight size={15} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="pond-panel">
+                            <EmptyState icon={<HandHeart size={25} />} title="No asks yet" body="When members share what they are dreaming about, you can toss them a ball here." />
+                        </div>
+                    )}
                 </section>
+
+                {tossing && <TossBallModal balls={balls} recipient={tossing} onClose={() => setTossing(null)} />}
             </PondShell>
         </>
     );

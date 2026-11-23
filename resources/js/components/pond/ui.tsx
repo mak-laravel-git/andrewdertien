@@ -1,7 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { ArrowRight, Bell, Compass, CreditCard, Droplets, Gem, Globe, Heart, LayoutDashboard, LogIn, KeyRound, LogOut, Menu, Search, Settings, Sparkles, UserRound, Users, Waves, X } from 'lucide-react';
+import { ArrowRight, Bell, Compass, CreditCard, Gem, Globe, Heart, LayoutDashboard, LogIn, KeyRound, LogOut, Menu, Search, Settings, Sparkles, UserRound, Users, Waves, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { PaymentModeBadge } from '@/components/pond/payment-mode';
@@ -28,7 +28,7 @@ type ShellLink = { label: string; href: string; icon: LucideIcon };
 
 const adminLinks: ShellLink[] = [
     { label: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
-    { label: 'Ponds', href: '/admin/ponds', icon: Waves },
+    { label: 'Balls', href: '/admin/ponds', icon: Waves },
     { label: 'Purchases & payments', href: '/admin/payments', icon: CreditCard },
     { label: 'Payment settings', href: '/admin/settings/stripe', icon: KeyRound },
     { label: 'Members', href: '/admin/users', icon: Users },
@@ -36,19 +36,17 @@ const adminLinks: ShellLink[] = [
 
 const memberLinks: ShellLink[] = [
     { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Choose a pond', href: '/dashboard/ponds', icon: Waves },
-    { label: 'My ponds', href: '/dashboard/my-ponds', icon: Gem },
+    { label: 'The Balls', href: '/dashboard/ponds', icon: Sparkles },
+    { label: 'My Balls', href: '/dashboard/my-ponds', icon: Gem },
     { label: 'Payment history', href: '/dashboard/payments', icon: CreditCard },
-    { label: 'The Pond', href: '/preview/feed', icon: Droplets },
-    { label: 'Explore', href: '/explore', icon: Compass },
+    { label: 'Explore the Pond', href: '/explore', icon: Compass },
     { label: 'My Profile', href: '/my-profile', icon: UserRound },
-    { label: 'The Balls', href: '/preview/balls', icon: Sparkles },
     { label: 'Connections', href: '/preview/connections', icon: Heart },
 ];
 
 const guestLinks: ShellLink[] = [
     { label: 'Overview', href: '/login', icon: LayoutDashboard },
-    { label: 'The Ponds', href: '/ponds', icon: Waves },
+    { label: 'The Balls', href: '/ponds', icon: Waves },
 ];
 
 /** The longest matching link wins, so /dashboard is not active on /dashboard/ponds. */
@@ -74,7 +72,7 @@ export function PondShell({ children, page = 'The Pond', subheading, action, dem
         router.get('/explore', search.trim() ? { search: search.trim() } : {});
     };
 
-    return <div className="pond-app"><aside className={`pond-sidebar ${menu ? 'is-open' : ''}`}><div className="pond-sidebar-brand"><Brand /><button className="pond-icon-btn pond-mobile-close" onClick={() => setMenu(false)} aria-label="Close menu"><X size={20} /></button></div><div className="pond-sidebar-little">{isAdmin ? 'ADMINISTRATION' : 'YOUR COMMUNITY'}</div><nav className="pond-side-links" aria-label={isAdmin ? 'Admin navigation' : 'Member navigation'}>{links.map(({ label, href, icon: Icon }) => <Link onClick={() => setMenu(false)} key={label} href={href} className={`pond-side-link ${current === href ? 'active' : ''}`}><Icon size={19} /><span>{label}</span></Link>)}</nav><div className="pond-sidebar-bottom">{!isAdmin && <div className="pond-side-quote"><div className="pond-side-quote-star"><Sparkles size={18} /></div><strong>Keep the balls rolling.</strong><p>Give a ball. Get a ball. Pass one along. See what happens.</p><Link href="/preview/balls">Explore the Balls <ArrowRight size={13} /></Link></div>}<Link href="/" className="pond-side-link"><Globe size={19} /> View website</Link>{user && <Link href="/settings/profile" className="pond-side-link"><Settings size={19} /> Account settings</Link>}{user ? <Link href={logout()} as="button" onClick={() => router.flushAll()} className="pond-side-link pond-side-logout" data-test="logout-button"><LogOut size={19} /> Log out</Link> : <Link href="/login" className="pond-side-link"><LogIn size={19} /> Sign in</Link>}</div></aside>{menu && <button className="pond-mobile-shade" onClick={() => setMenu(false)} aria-label="Close navigation" />}
+    return <div className="pond-app"><aside className={`pond-sidebar ${menu ? 'is-open' : ''}`}><div className="pond-sidebar-brand"><Brand /><button className="pond-icon-btn pond-mobile-close" onClick={() => setMenu(false)} aria-label="Close menu"><X size={20} /></button></div><div className="pond-sidebar-little">{isAdmin ? 'ADMINISTRATION' : 'YOUR COMMUNITY'}</div><nav className="pond-side-links" aria-label={isAdmin ? 'Admin navigation' : 'Member navigation'}>{links.map(({ label, href, icon: Icon }) => <Link onClick={() => setMenu(false)} key={label} href={href} className={`pond-side-link ${current === href ? 'active' : ''}`}><Icon size={19} /><span>{label}</span></Link>)}</nav><div className="pond-sidebar-bottom">{!isAdmin && <div className="pond-side-quote"><div className="pond-side-quote-star"><Sparkles size={18} /></div><strong>Keep the balls rolling.</strong><p>Give a ball. Get a ball. Pass one along. See what happens.</p><Link href="/dashboard/ponds">Explore the Balls <ArrowRight size={13} /></Link></div>}<Link href="/" className="pond-side-link"><Globe size={19} /> View website</Link>{user && <Link href="/settings/profile" className="pond-side-link"><Settings size={19} /> Account settings</Link>}{user ? <Link href={logout()} as="button" onClick={() => router.flushAll()} className="pond-side-link pond-side-logout" data-test="logout-button"><LogOut size={19} /> Log out</Link> : <Link href="/login" className="pond-side-link"><LogIn size={19} /> Sign in</Link>}</div></aside>{menu && <button className="pond-mobile-shade" onClick={() => setMenu(false)} aria-label="Close navigation" />}
         <div className="pond-main"><header className="pond-topbar"><div className="pond-top-left"><button className="pond-icon-btn pond-menu-toggle" aria-label="Open menu" onClick={() => setMenu(true)}><Menu size={21} /></button><div className="pond-breadcrumb"><span>{isAdmin ? 'Admin' : 'Community'}</span><span className="crumb-sep">/</span><strong>{page}</strong></div></div><div className="pond-header-actions"><PaymentModeBadge /><button className="pond-search-trigger" onClick={() => setShowSearch(true)}><Search size={17} /><span>Search the pond...</span><kbd>⌘ K</kbd></button><div className="pond-notification-wrap"><button className="pond-icon-btn pond-bell" onClick={() => setNotifications(v => !v)} aria-label="Notifications"><Bell size={19} /></button>{notifications && <div className="pond-popover"><strong>Notifications</strong><p>You&rsquo;re all caught up.</p></div>}</div><Link href={profileHref} aria-label="Your profile"><Avatar name={user?.name ?? 'Jordan Lee'} hue={user ? hueFor(user.id) : 'lilac'} size="avatar-small" src={avatarSrc} /></Link></div></header>{demo && <DemoBanner />}<main className="pond-content">{!hideHeading && <div className="pond-page-heading"><div><span className="pond-page-kicker">ASK UPON A POND</span><h1>{page}</h1>{subheading && <p>{subheading}</p>}</div>{action}</div>}{children}</main><footer className="pond-app-footer"><span>© 2026 Ask Upon A Pond · There's room for everyone</span><span>{demo ? 'Design preview · Laravel + Inertia + React' : 'Ask Upon A Pond community'}</span></footer></div>
         {showSearch && <Modal title="Find your people" subtitle="Search members by name, username or city." onClose={() => setShowSearch(false)}><form onSubmit={submitSearch}><div className="pond-search-field"><Search size={19} /><input autoFocus value={search} onChange={e => setSearch(e.target.value)} placeholder="Search the community..." aria-label="Search members" maxLength={100} /></div><div className="pond-search-results"><button type="submit" className="pond-search-submit"><Search size={15} />{search.trim() ? `Search members for “${search.trim()}”` : 'Browse all members'}<ArrowRight size={14} /></button></div></form></Modal>}</div>;
 }
