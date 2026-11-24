@@ -1832,3 +1832,23 @@
         font-size: 16px !important
     }
 }
+
+/* Phone drawer: a little wider so the close button never sits on top of the logo text. */
+@media (max-width: 1020px) {
+    .pond-sidebar {
+        width: min(300px, 86vw)
+    }
+
+    .pond-sidebar-brand {
+        gap: 8px
+    }
+
+    .pond-sidebar-brand .pond-brand {
+        flex: 1 1 auto;
+        min-width: 0
+    }
+
+    .pond-sidebar-brand .pond-mobile-close {
+        flex: 0 0 auto
+    }
+}
