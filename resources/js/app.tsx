@@ -12,7 +12,8 @@ import AuthLayout from '@/layouts/auth-layout';
 import PondAdminLayout from '@/layouts/pond-admin-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+/** Fixed so a build-time environment variable can never put a wrong site name in browser tabs. */
+const appName = 'Ask Upon A Pond';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
