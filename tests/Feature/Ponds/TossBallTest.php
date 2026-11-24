@@ -230,3 +230,18 @@ test('the Deep End balls cannot be bought through checkout or the ball picker', 
         ->where('ponds', fn ($ponds) => collect($ponds)->every(fn ($ball) => ! str_contains($ball['name'], 'Zuckerberg') && ! str_contains($ball['name'], 'Musk')))
     );
 });
+
+test('The Balls page lists other members so a giver can pick who a ball is for', function () {
+    User::factory()->create(['username' => null, 'name' => 'No Username']);
+
+    $this->actingAs($this->giver)
+        ->get(route('member.ponds.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('pond/member/ponds')
+            ->has('members', 1)
+            ->where('members.0.id', $this->friend->id)
+            ->where('members.0.name', 'Jamie Pond')
+            ->where('members.0.ask', 'A piece of land and some dogs.')
+            ->where('recipient', null)
+        );
+});

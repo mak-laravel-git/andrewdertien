@@ -1,5 +1,12 @@
 import { router } from '@inertiajs/react';
-import { ArrowRight, Check, CreditCard, FlaskConical } from 'lucide-react';
+import {
+    ArrowRight,
+    Check,
+    CreditCard,
+    FlaskConical,
+    Search,
+    X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { formatMoney, PondArt } from '@/components/pond/commerce';
 import type { PondCard } from '@/components/pond/commerce';
@@ -16,6 +23,106 @@ export type Recipient = {
     ask: string | null;
 };
 
+/**
+ * Who the ball is for. Tossing "into the Pond" needs no one in particular; a member can also be
+ * searched for by name, username or what they are asking for.
+ */
+function RecipientPicker({
+    members,
+    chosen,
+    onChoose,
+}: {
+    members: Recipient[];
+    chosen: Recipient | null;
+    onChoose: (member: Recipient | null) => void;
+}) {
+    const [query, setQuery] = useState('');
+    const term = query.trim().toLowerCase();
+    const matches = members
+        .filter(
+            (member) =>
+                term === '' ||
+                member.name.toLowerCase().includes(term) ||
+                (member.username ?? '').toLowerCase().includes(term) ||
+                (member.ask ?? '').toLowerCase().includes(term),
+        )
+        .slice(0, 5);
+
+    if (chosen) {
+        return (
+            <div className="tb-recipient" data-test="toss-recipient">
+                <Avatar
+                    name={chosen.name}
+                    hue={hueFor(chosen.id)}
+                    size="avatar-small"
+                    src={chosen.avatar_url}
+                />
+                <div>
+                    <strong>{chosen.name}</strong>
+                    {chosen.ask && <p>&ldquo;{chosen.ask}&rdquo;</p>}
+                </div>
+                <button
+                    type="button"
+                    className="tb-change"
+                    onClick={() => onChoose(null)}
+                    aria-label={`Choose someone other than ${chosen.name}`}
+                >
+                    <X size={14} /> Change
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="tb-picker" data-test="toss-picker">
+            <div className="tb-label">Who is it for? (optional)</div>
+            <p className="tb-into-pond">
+                Leave this empty to toss it into the Pond, or pick a member.
+            </p>
+            <label className="tb-search">
+                <Search size={16} aria-hidden="true" />
+                <input
+                    type="search"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search members by name or ask"
+                    aria-label="Search members"
+                    autoComplete="off"
+                />
+            </label>
+            {members.length === 0 ? (
+                <p className="tb-none">No other members to choose from yet.</p>
+            ) : matches.length === 0 ? (
+                <p className="tb-none">
+                    No members match &ldquo;{query}&rdquo;.
+                </p>
+            ) : (
+                <ul className="tb-matches">
+                    {matches.map((member) => (
+                        <li key={member.id}>
+                            <button
+                                type="button"
+                                onClick={() => onChoose(member)}
+                            >
+                                <Avatar
+                                    name={member.name}
+                                    hue={hueFor(member.id)}
+                                    size="avatar-small"
+                                    src={member.avatar_url}
+                                />
+                                <span>
+                                    <strong>{member.name}</strong>
+                                    {member.ask && <small>{member.ask}</small>}
+                                </span>
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+}
+
 function dollars(cents: number): string {
     return String(cents / 100);
 }
@@ -27,12 +134,15 @@ function dollars(cents: number): string {
 export function TossBallModal({
     balls,
     recipient = null,
+    members,
     initialBallId,
     initialCategory,
     onClose,
 }: {
     balls: PondCard[];
     recipient?: Recipient | null;
+    /** When given, the giver can choose (or change) who the ball is for. */
+    members?: Recipient[];
     initialBallId?: number;
     initialCategory?: string;
     onClose: () => void;
@@ -49,6 +159,7 @@ export function TossBallModal({
     const [isOther, setIsOther] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isRedirecting, setIsRedirecting] = useState(false);
+    const [chosen, setChosen] = useState<Recipient | null>(recipient);
 
     if (!ball) {
         return (
@@ -97,17 +208,42 @@ export function TossBallModal({
         }
 
         setIsRedirecting(true);
+        setError(null);
+
+        // If the browser has not left for the payment page after a while, say so instead of sitting silent.
+        const slowTimer = window.setTimeout(() => {
+            setIsRedirecting(false);
+            setError(
+                'The payment page is taking longer than expected. Please try again.',
+            );
+        }, 15000);
+
+        const stopWaiting = () => {
+            window.clearTimeout(slowTimer);
+            setIsRedirecting(false);
+        };
+
         router.post(
             memberCheckout.store.url(ball.slug),
-            { amount: amountNumber, recipient_id: recipient?.id ?? null },
+            { amount: amountNumber, recipient_id: chosen?.id ?? null },
             {
-                onError: (errors) =>
+                // A successful visit means we were sent back here (for example with an error message),
+                // not on to the payment page, which leaves this page entirely.
+                onSuccess: stopWaiting,
+                onError: (errors) => {
+                    stopWaiting();
                     setError(
                         errors.amount ??
                             errors.recipient_id ??
                             'We could not start that payment. Please try again.',
-                    ),
-                onFinish: () => setIsRedirecting(false),
+                    );
+                },
+                onNetworkError: () => {
+                    stopWaiting();
+                    setError(
+                        'We could not reach the server. Please check your connection and try again.',
+                    );
+                },
             },
         );
     };
@@ -116,25 +252,33 @@ export function TossBallModal({
         <Modal
             title="Choose a Ball"
             subtitle={
-                recipient
-                    ? `Toss ${recipient.name} a ball, then choose an amount.`
+                chosen
+                    ? `Toss ${chosen.name} a ball, then choose an amount.`
                     : 'Pick the ball that feels right, then choose an amount.'
             }
             onClose={onClose}
         >
-            {recipient && (
-                <div className="tb-recipient" data-test="toss-recipient">
-                    <Avatar
-                        name={recipient.name}
-                        hue={hueFor(recipient.id)}
-                        size="avatar-small"
-                        src={recipient.avatar_url}
-                    />
-                    <div>
-                        <strong>{recipient.name}</strong>
-                        {recipient.ask && <p>&ldquo;{recipient.ask}&rdquo;</p>}
+            {members ? (
+                <RecipientPicker
+                    members={members}
+                    chosen={chosen}
+                    onChoose={setChosen}
+                />
+            ) : (
+                chosen && (
+                    <div className="tb-recipient" data-test="toss-recipient">
+                        <Avatar
+                            name={chosen.name}
+                            hue={hueFor(chosen.id)}
+                            size="avatar-small"
+                            src={chosen.avatar_url}
+                        />
+                        <div>
+                            <strong>{chosen.name}</strong>
+                            {chosen.ask && <p>&ldquo;{chosen.ask}&rdquo;</p>}
+                        </div>
                     </div>
-                </div>
+                )
             )}
 
             <div className="tb-label">1. Choose a Ball</div>

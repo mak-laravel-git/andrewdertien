@@ -39,6 +39,13 @@ class PondController extends Controller
                 ->get()
                 ->map->toCard(),
             'recipient' => $recipient?->toRecipient(),
+            'members' => User::query()
+                ->discoverable()
+                ->whereKeyNot($request->user()->id)
+                ->orderBy('name')
+                ->limit(500)
+                ->get()
+                ->map->toRecipient(),
             'categories' => collect(PondCategory::cases())
                 ->map(fn (PondCategory $option): array => ['value' => $option->value, 'label' => $option->label()]),
             'filters' => ['category' => $category?->value ?? ''],

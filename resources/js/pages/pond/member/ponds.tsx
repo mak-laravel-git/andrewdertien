@@ -11,11 +11,12 @@ import memberPonds from '@/routes/member/ponds';
 type Props = {
     ponds: PondCard[];
     recipient: Recipient | null;
+    members: Recipient[];
     categories: { value: string; label: string }[];
     filters: { category: string };
 };
 
-export default function MemberBalls({ ponds, recipient, categories, filters }: Props) {
+export default function MemberBalls({ ponds, recipient, members, categories, filters }: Props) {
     const [chosen, setChosen] = useState<PondCard | null>(null);
     const chooseCategory = (category: string) =>
         router.get(memberPonds.index.url({ query: { category: category || undefined, to: recipient?.username || undefined } }), {}, { preserveState: true, preserveScroll: true });
@@ -47,7 +48,7 @@ export default function MemberBalls({ ponds, recipient, categories, filters }: P
 
                 <DeepEnd />
 
-                {chosen && <TossBallModal balls={ponds} recipient={recipient} initialBallId={chosen.id} onClose={() => setChosen(null)} />}
+                {chosen && <TossBallModal balls={ponds} recipient={recipient} members={members} initialBallId={chosen.id} onClose={() => setChosen(null)} />}
             </PondShell>
         </>
     );

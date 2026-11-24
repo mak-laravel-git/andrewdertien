@@ -1699,3 +1699,127 @@
 .pd-table td:first-child {
     min-width: 150px
 }
+
+/* ── Choosing who a ball is for ─────────────────────────────────────── */
+.tb-recipient .tb-change {
+    margin-left: auto;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #dbe1ea;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--qp-ink);
+    cursor: pointer
+}
+
+.tb-picker {
+    margin-bottom: 18px
+}
+
+.tb-into-pond {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: #5a687e
+}
+
+.tb-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: 1.5px solid #dbe1ea;
+    border-radius: 12px;
+    background: #f8fafd;
+    color: #7e92b1
+}
+
+.tb-search input {
+    flex: 1;
+    min-width: 0;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    color: var(--qp-ink)
+}
+
+.tb-none {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: #7e92b1
+}
+
+.tb-matches {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px
+}
+
+.tb-matches button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid #e7ebf0;
+    border-radius: 12px;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+    min-width: 0
+}
+
+.tb-matches button span {
+    display: flex;
+    flex-direction: column;
+    min-width: 0
+}
+
+.tb-matches strong {
+    color: var(--qp-ink);
+    font-size: 14px
+}
+
+.tb-matches small {
+    font-size: 12px;
+    color: #5a687e;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap
+}
+
+/* ── Phones: keep the whole drawer reachable and stop iOS zooming into inputs ── */
+@media (max-width: 1020px) {
+    .pond-sidebar {
+        height: 100vh;
+        height: 100dvh;
+        max-height: 100dvh;
+        padding-bottom: calc(17px + env(safe-area-inset-bottom, 0px));
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch
+    }
+
+    .pond-sidebar-brand {
+        padding-bottom: 20px
+    }
+
+    .pond-side-quote {
+        display: none
+    }
+
+    .pond-app input,
+    .pond-app select,
+    .pond-app textarea,
+    .pond-modal input,
+    .pond-modal select,
+    .pond-modal textarea {
+        font-size: 16px
+    }
+}
