@@ -1823,3 +1823,12 @@
         font-size: 16px
     }
 }
+
+/* iOS Safari zooms the whole page when a field under 16px is tapped. Keep every field at 16px on phones and tablets. */
+@media (max-width: 1020px) {
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+    select,
+    textarea {
+        font-size: 16px !important
+    }
+}
