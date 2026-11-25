@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WalletController as AdminWalletController;
 use App\Http\Controllers\Admin\WithdrawalController as AdminWithdrawalController;
+use App\Http\Controllers\AdvertisingInquiryController;
 use App\Http\Controllers\BallOfferController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\DashboardController;
@@ -40,6 +41,10 @@ Route::get('toss/{username}', TossController::class)->name('toss');
 
 // "Make Me an Offer" on The Deep End.
 Route::post('deep-end/offers', [BallOfferController::class, 'store'])->name('ball-offers.store')
+    ->middleware('throttle:5,1');
+
+// "Advertise on the Pond": inquiry form on the Explore page.
+Route::post('advertise', [AdvertisingInquiryController::class, 'store'])->name('advertising-inquiries.store')
     ->middleware('throttle:5,1');
 
 // Step 2 of sign-up ("Make a Splash!"): new members land here straight after registering.

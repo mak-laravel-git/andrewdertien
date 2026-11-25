@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowUpRight, Heart, MapPin, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
+import { AdvertiseCallout } from '@/components/pond/advertise-callout';
 import { categories } from '@/components/pond/data';
 import type { CategoryKey, MemberProfile } from '@/components/pond/data';
 import { Avatar, CategoryPill, EmptyState, hueFor, PondShell, SectionEyebrow } from '@/components/pond/ui';
@@ -14,6 +15,9 @@ type Paginated<T> = {
     next_page_url: string | null;
     total: number;
 };
+
+/** The callout appears after this many member cards (two rows of three). */
+const CALLOUT_AFTER = 6;
 
 type Props = {
     members: Paginated<MemberProfile>;
@@ -91,11 +95,13 @@ export default function Explore({ members, filters }: Props) {
                 </div>
 
                 <div className="pond-people-grid">
-                    {members.data.map((member) => {
+                    {members.data.map((member, position) => {
                         const highlight = teaser(member, filters.category);
 
                         return (
-                            <Link href={show(member.username!)} className="pond-person-card pond-person-link" key={member.id}>
+                            <Fragment key={member.id}>
+                            {position === CALLOUT_AFTER && <AdvertiseCallout />}
+                            <Link href={show(member.username!)} className="pond-person-card pond-person-link">
                                 <div className="pond-person-gradient">
                                     <span>{member.open_to_romance ? <Heart size={22} fill="currentColor" aria-label="Open to romantic connections" /> : '✧'}</span>
                                     <Avatar name={member.name} hue={hueFor(member.id)} size="avatar-person" src={member.avatar_url} />
@@ -120,8 +126,10 @@ export default function Explore({ members, filters }: Props) {
                                     </span>
                                 </div>
                             </Link>
+                            </Fragment>
                         );
                     })}
+                    {members.data.length > 0 && members.data.length <= CALLOUT_AFTER && <AdvertiseCallout />}
                     {!members.data.length && <EmptyState icon={<Search />} title="No members found" body="Try a different name, city or section." />}
                 </div>
 

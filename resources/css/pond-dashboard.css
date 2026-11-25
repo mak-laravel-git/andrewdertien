@@ -2675,3 +2675,144 @@ a.cm-name:hover {
     border: 0;
     padding: 4px 0 0
 }
+
+/* Explore: "Advertise on the Pond" callout */
+.pond-advertise {
+    grid-column: 1 / -1;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 24px;
+    overflow: hidden;
+    padding: 34px 40px;
+    border: 1px solid #b9d3f7;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #eaf3ff 0%, #cfe3fb 55%, #b4d3f6 100%);
+    color: #14315c
+}
+
+.pond-advertise-copy h3 {
+    margin: 0 0 12px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: clamp(28px, 3.4vw, 40px);
+    line-height: 1.1;
+    color: #0f2d5c
+}
+
+.pond-advertise-copy p {
+    margin: 0 0 10px;
+    max-width: 520px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: #27456f
+}
+
+.pond-advertise-btn {
+    margin-top: 10px;
+    border: 0;
+    border-radius: 999px;
+    padding: 13px 28px;
+    background: #2f6fdb;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 18px rgba(47, 111, 219, .3);
+    transition: background .15s, transform .15s
+}
+
+.pond-advertise-btn:hover {
+    background: #2459b3;
+    transform: translateY(-1px)
+}
+
+.pond-advertise-btn:focus-visible {
+    outline: 3px solid #14315c;
+    outline-offset: 3px
+}
+
+.pond-advertise-art {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 170px
+}
+
+.pond-advertise-art img {
+    position: relative;
+    z-index: 1;
+    width: 86px;
+    height: 86px;
+    filter: drop-shadow(0 8px 10px rgba(15, 45, 92, .28));
+    animation: pond-advertise-bob 4s ease-in-out infinite
+}
+
+.pond-advertise-ripple {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 120px;
+    height: 44px;
+    margin: -22px 0 0 -60px;
+    border: 2px solid rgba(255, 255, 255, .75);
+    border-radius: 50%;
+    animation: pond-advertise-ripple 4.5s ease-out infinite
+}
+
+.pond-advertise-ripple:nth-child(2) {
+    animation-delay: 1.5s
+}
+
+.pond-advertise-ripple:nth-child(3) {
+    animation-delay: 3s
+}
+
+@keyframes pond-advertise-ripple {
+    from {
+        transform: scale(.5);
+        opacity: .9
+    }
+
+    to {
+        transform: scale(2.4);
+        opacity: 0
+    }
+}
+
+@keyframes pond-advertise-bob {
+    0%, 100% {
+        transform: translateY(0)
+    }
+
+    50% {
+        transform: translateY(-6px)
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pond-advertise-art img,
+    .pond-advertise-ripple {
+        animation: none
+    }
+
+    .pond-advertise-ripple {
+        opacity: .6;
+        transform: scale(1.4)
+    }
+}
+
+@media (max-width: 760px) {
+    .pond-advertise {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 26px 22px
+    }
+
+    .pond-advertise-art {
+        order: -1;
+        min-height: 130px
+    }
+}
