@@ -21,7 +21,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable([
-    'name', 'username', 'email', 'password', 'avatar', 'location', 'date_of_birth',
+    'name', 'username', 'email', 'phone', 'password', 'avatar', 'location', 'date_of_birth',
     'dreams', 'fun', 'treats', 'boost', 'interests', 'about', 'open_to_romance',
 ])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -183,6 +183,49 @@ class User extends Authenticatable
     public function receivedPurchases(): HasMany
     {
         return $this->hasMany(PondPurchase::class, 'recipient_id');
+    }
+
+    /**
+     * What this member has shared with the community.
+     *
+     * @return HasMany<CommunityPost, $this>
+     */
+    public function communityPosts(): HasMany
+    {
+        return $this->hasMany(CommunityPost::class);
+    }
+
+    /**
+     * Messages other members have sent to this member.
+     *
+     * @return HasMany<Message, $this>
+     */
+    public function receivedMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'recipient_id');
+    }
+
+    /**
+     * How many messages this member has not opened yet.
+     */
+    public function unreadMessageCount(): int
+    {
+        return $this->receivedMessages()->whereNull('read_at')->count();
+    }
+
+    /**
+     * The small "who is this" card used beside posts, comments and conversations.
+     *
+     * @return array{id: int, name: string, username: string|null, avatar_url: string|null}
+     */
+    public function toMemberChip(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'username' => $this->username,
+            'avatar_url' => $this->avatarUrl(),
+        ];
     }
 
     /**

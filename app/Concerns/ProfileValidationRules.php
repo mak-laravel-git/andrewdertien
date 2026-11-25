@@ -131,6 +131,16 @@ trait ProfileValidationRules
     }
 
     /**
+     * A phone number is optional and only has to look like one.
+     *
+     * @return array<int, string>
+     */
+    protected function phoneRules(): array
+    {
+        return ['nullable', 'string', 'max:30', 'regex:/^\+?[0-9][0-9\s().\-]{5,29}$/'];
+    }
+
+    /**
      * Get the validation rules used to validate user emails.
      *
      * @return array<int, ValidationRule|array<mixed>|string>

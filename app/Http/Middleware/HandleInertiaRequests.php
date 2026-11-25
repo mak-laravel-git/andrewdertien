@@ -56,6 +56,8 @@ class HandleInertiaRequests extends Middleware
                 'mode' => app(PaymentGatewayManager::class)->mode(),
                 'is_test_mode' => app(PaymentGatewayManager::class)->isTestMode(),
             ] : null,
+            // The little number on the Messages link.
+            'unreadMessages' => fn (): int => $user?->unreadMessageCount() ?? 0,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

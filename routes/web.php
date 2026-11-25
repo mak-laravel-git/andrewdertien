@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PondController as AdminPondController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\BallOfferController;
+use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FileUploadDemoController;
 use App\Http\Controllers\Member\CheckoutController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Member\PondController as MemberPondController;
 use App\Http\Controllers\Member\SandboxCheckoutController;
 use App\Http\Controllers\MemberDirectoryController;
 use App\Http\Controllers\MemberProfileController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PondCatalogController;
 use App\Http\Controllers\PostAttachmentController;
 use App\Http\Controllers\SplashController;
@@ -68,6 +70,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('sandbox', [SandboxCheckoutController::class, 'complete'])->name('sandbox.complete');
     });
 
+    // ── Community: what members share, celebrate and comment on ───────────────
+    Route::prefix('community')->name('community.')->controller(CommunityController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('posts', 'store')->name('posts.store')->middleware('throttle:20,1');
+        Route::delete('posts/{post}', 'destroy')->name('posts.destroy');
+        Route::post('posts/{post}/celebrate', 'celebrate')->name('posts.celebrate')->middleware('throttle:60,1');
+        Route::post('posts/{post}/comments', 'comment')->name('posts.comment')->middleware('throttle:30,1');
+    });
+
+    // ── Messages: private conversations between members ───────────────────────
+    Route::prefix('messages')->name('messages.')->controller(MessageController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('{user:username}', 'index')->name('show');
+        Route::post('{user:username}', 'store')->name('store')->middleware('throttle:30,1');
+    });
+
     // Member app UI (sample-data design). Guests are redirected to login first.
     foreach (['dashboard', 'feed', 'explore', 'profile', 'balls', 'connections', 'messages', 'history'] as $screen) {
         Route::inertia("preview/{$screen}", 'pond/preview', ['view' => $screen])->name("preview.{$screen}");
@@ -76,6 +94,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ── Member profiles ───────────────────────────────────────────────────────
     Route::get('explore', [MemberDirectoryController::class, 'index'])->name('members.index');
     Route::get('members/{user:username}', [MemberProfileController::class, 'show'])->name('members.show');
+
+    // ── My Account: private details, password, security ───────────────────────
+    Route::get('my-account', [MemberProfileController::class, 'account'])->name('member-account.edit');
+    Route::patch('my-account', [MemberProfileController::class, 'updateAccount'])->name('member-account.update')
+        ->middleware('throttle:20,1');
 
     Route::controller(MemberProfileController::class)->prefix('my-profile')->name('member-profile.')->group(function () {
         Route::get('/', 'edit')->name('edit');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Interest;
+use App\Http\Requests\MemberProfile\UpdateAccountRequest;
 use App\Http\Requests\MemberProfile\UpdateAvatarRequest;
 use App\Http\Requests\MemberProfile\UpdateMemberProfileRequest;
 use App\Models\Pond;
@@ -70,6 +71,48 @@ class MemberProfileController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile saved.')]);
 
         return to_route('member-profile.edit');
+    }
+
+    /**
+     * The signed-in member's private account page: personal details, password and security.
+     */
+    public function account(Request $request): Response
+    {
+        $user = $request->user();
+
+        return Inertia::render('pond/account', [
+            'account' => [
+                'name' => $user->name,
+                'username' => $user->username,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'location' => $user->location,
+                'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
+                'avatar_url' => $user->avatarUrl(),
+                'member_since' => $user->created_at?->format('F Y') ?? '',
+                'id' => $user->id,
+            ],
+            'twoFactorEnabled' => $user->hasEnabledTwoFactorAuthentication(),
+        ]);
+    }
+
+    /**
+     * Save the signed-in member's personal details. A new email address has to be verified again.
+     */
+    public function updateAccount(UpdateAccountRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+        $user->fill($request->validated());
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Account details saved.')]);
+
+        return to_route('member-account.edit');
     }
 
     /**

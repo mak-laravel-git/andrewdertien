@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, Coffee, Gift, Heart, MapPin, Mountain, Settings2, ShieldCheck, Smile } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Coffee, Gift, Heart, MapPin, MessageCircle, Mountain, Settings2, ShieldCheck, Smile } from 'lucide-react';
 import { useState } from 'react';
 import type { PondCard } from '@/components/pond/commerce';
 import type { MemberProfile } from '@/components/pond/data';
@@ -9,6 +9,7 @@ import type { Recipient } from '@/components/pond/toss-ball';
 import { Avatar, hueFor, Modal, PondShell } from '@/components/pond/ui';
 import { edit } from '@/routes/member-profile';
 import { index as explore } from '@/routes/members';
+import messages from '@/routes/messages';
 
 type Props = {
     member: MemberProfile;
@@ -153,6 +154,9 @@ export default function Member({ member, isOwnProfile, canSendSparkBall, recipie
                             <button type="button" className="pp-action pp-action-give" onClick={() => setTossCategory('dreams')}>
                                 <Gift size={18} /> Toss {firstName} a Ball
                             </button>
+                            <Link href={messages.show.url(member.username ?? '')} className="pp-action" data-test="message-member">
+                                <MessageCircle size={18} /> Message {firstName}
+                            </Link>
                             {canSendSparkBall && (
                                 <button type="button" className="pp-action" onClick={() => setSparkInfo(true)}>
                                     <Heart size={18} /> Send a Spark Ball
