@@ -162,7 +162,7 @@ class User extends Authenticatable
     /**
      * What a giver sees about this member while tossing them a ball.
      *
-     * @return array{id: int, name: string, username: string|null, avatar_url: string|null, ask: string|null}
+     * @return array{id: int, name: string, username: string|null, avatar_url: string|null, ask: string|null, can_receive: bool}
      */
     public function toRecipient(): array
     {
@@ -172,6 +172,7 @@ class User extends Authenticatable
             'username' => $this->username,
             'avatar_url' => $this->avatarUrl(),
             'ask' => $this->mainAsk(),
+            'can_receive' => $this->canBeTossedABall(),
         ];
     }
 
@@ -183,6 +184,42 @@ class User extends Authenticatable
     public function receivedPurchases(): HasMany
     {
         return $this->hasMany(PondPurchase::class, 'recipient_id');
+    }
+
+    /**
+     * The lines of this member's wallet ledger.
+     *
+     * @return HasMany<WalletEntry, $this>
+     */
+    public function walletEntries(): HasMany
+    {
+        return $this->hasMany(WalletEntry::class);
+    }
+
+    /**
+     * Every time this member has asked for money in their wallet to be paid out.
+     *
+     * @return HasMany<WithdrawalRequest, $this>
+     */
+    public function withdrawalRequests(): HasMany
+    {
+        return $this->hasMany(WithdrawalRequest::class);
+    }
+
+    /**
+     * Whether a ball can be tossed to this member. Never to a member known to be under 18.
+     */
+    public function canBeTossedABall(): bool
+    {
+        return $this->date_of_birth === null || $this->isAdult();
+    }
+
+    /**
+     * Whether this member can ask for money in their wallet to be paid out. Only adults can.
+     */
+    public function canWithdraw(): bool
+    {
+        return $this->isAdult();
     }
 
     /**

@@ -16,7 +16,7 @@ beforeEach(function () {
     $this->giver = User::factory()->create();
     $this->giver->assignRole(RoleEnum::USER->value);
 
-    $this->friend = User::factory()->create(['name' => 'Jamie Pond', 'username' => 'jamie', 'dreams' => 'A piece of land and some dogs.']);
+    $this->friend = User::factory()->adult()->create(['name' => 'Jamie Pond', 'username' => 'jamie', 'dreams' => 'A piece of land and some dogs.']);
     $this->friend->assignRole(RoleEnum::USER->value);
 
     $this->ball = Pond::factory()->create(['price_cents' => 10000]);

@@ -2274,3 +2274,404 @@ a.cm-name:hover {
 .pond-chat-header .cm-name {
     font-size: 13px
 }
+
+/* Fee note under the amount, and the admin Fees & limits card */
+.tb-fee-note {
+    font-size: 12px;
+    color: #5d6777;
+    background: #f4f7fc;
+    border-radius: 10px;
+    padding: 9px 12px;
+    margin: 10px 0 0;
+    line-height: 1.5
+}
+
+.fl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px
+}
+
+.fl-example {
+    background: #f4f7fc;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #404a5a;
+    line-height: 1.7
+}
+
+.fl-example strong {
+    color: #1f3b66
+}
+
+.fl-hint {
+    display: block;
+    color: #8c90a7;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 4px
+}
+
+/* Payouts */
+.po-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 760px
+}
+
+.po-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #8c90a7;
+    font-size: 12px;
+    margin: 4px 0 12px
+}
+
+.po-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    background: #fff8e6;
+    border: 1px solid #f3dfa8;
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    color: #7a5a10
+}
+
+.po-banner > div {
+    flex: 1;
+    min-width: 200px
+}
+
+.po-banner p {
+    font-size: 12px;
+    margin: 2px 0 0
+}
+
+.pd-connect-note {
+    font-size: 12px;
+    color: #5d6777;
+    line-height: 1.6;
+    margin: 12px 0
+}
+
+.pd-connect-note code {
+    margin-right: 6px
+}
+
+/* A member who cannot be tossed a ball yet */
+.tb-blocked {
+    background: #fff8e6;
+    border: 1px solid #f3dfa8;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin: 12px 0 0;
+    color: #7a5a10;
+    font-size: 13px;
+    line-height: 1.5
+}
+
+.tb-blocked p {
+    margin: 0 0 10px
+}
+
+.tb-blocked .pond-btn {
+    width: 100%;
+    justify-content: center
+}
+
+.tb-matches button.tb-unavailable {
+    opacity: .6
+}
+
+.tb-matches button.tb-unavailable small {
+    color: #b07a10
+}
+
+.pp-cta:disabled,
+.pp-action:disabled,
+.pp-quick-actions .pond-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    filter: grayscale(.3)
+}
+
+.pp-card .tb-blocked {
+    text-align: left
+}
+
+.tb-currency-note {
+    font-size: 11px;
+    color: #8c90a7;
+    margin: 8px 0 0
+}
+
+/* Bell notifications */
+.ms-alert {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 0;
+    border-top: 1px solid #eef1f5;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4
+}
+
+.ms-alert.is-unread {
+    font-weight: 700
+}
+
+.ms-alert small {
+    color: #a3a5b4;
+    font-weight: 500;
+    font-size: 10px
+}
+
+.ms-mark-read {
+    margin-top: 6px;
+    color: #5784c7;
+    font-size: 12px;
+    font-weight: 700
+}
+
+/* Earnings */
+.po-totals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px
+}
+
+.po-total {
+    background: #f4f7fc;
+    border-radius: 12px;
+    padding: 12px 14px
+}
+
+.po-total span {
+    display: block;
+    font-size: 11px;
+    color: #8c90a7
+}
+
+.po-total strong {
+    font-size: 20px;
+    color: #1f3b66
+}
+
+.po-earn-list {
+    display: flex;
+    flex-direction: column;
+    margin-top: 12px
+}
+
+.po-earn-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    padding: 10px 0;
+    border-top: 1px solid #eef1f5;
+    font-size: 13px
+}
+
+.po-earn-row small {
+    color: #8c90a7;
+    font-size: 11px;
+    grid-column: 1 / -1
+}
+
+.po-status {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #f1f4f9;
+    color: #5d6777;
+    margin-left: 6px
+}
+
+.po-status.is-transferred {
+    background: #e6f6ed;
+    color: #1f8a4c
+}
+
+.po-status.is-failed,
+.po-status.is-reversed {
+    background: #fdecea;
+    color: #c0392b
+}
+
+.po-status.is-pending {
+    background: #fff8e6;
+    color: #7a5a10
+}
+
+/* Admin money */
+.ad-money {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px
+}
+
+.ad-attention-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-top: 1px solid #eef1f5;
+    font-size: 13px
+}
+
+.ad-attention-row small {
+    display: block;
+    color: #8c90a7;
+    font-size: 11px
+}
+
+.po-banner-good {
+    background: #eaf7ef;
+    border-color: #bfe3cc;
+    color: #1f6b3e
+}
+
+.po-received {
+    display: block;
+    margin-top: 6px;
+    color: #1f8a4c;
+    font-weight: 800;
+    font-size: 12px
+}
+
+/* Wallet */
+.wl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+    margin: 16px 0
+}
+
+.wl-grid .pond-panel {
+    margin: 0
+}
+
+.wl-in {
+    color: #1f8a4c
+}
+
+.wl-out {
+    color: #c0392b
+}
+
+.wl-ref {
+    font-family: ui-monospace, monospace;
+    justify-self: end
+}
+
+.wl-reason {
+    color: #c0392b !important
+}
+
+.po-status.is-paid {
+    background: #e6f6ed;
+    color: #1f8a4c
+}
+
+.po-status.is-rejected,
+.po-status.is-cancelled {
+    background: #f1f4f9;
+    color: #5d6777
+}
+
+/* Admin withdrawals and wallets */
+.wd-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px
+}
+
+.wd-card {
+    border: 1px solid #e6eaf1;
+    border-radius: 14px;
+    padding: 14px 16px
+}
+
+.wd-card header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start
+}
+
+.wd-card header small {
+    display: block;
+    color: #8c90a7;
+    font-size: 12px;
+    margin-top: 2px
+}
+
+.wd-details {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 6px 12px;
+    margin: 12px 0;
+    font-size: 13px
+}
+
+.wd-details dt {
+    color: #8c90a7
+}
+
+.wd-details dd {
+    margin: 0;
+    word-break: break-word
+}
+
+.wd-pay-to {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start
+}
+
+.wd-pay-to pre {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: inherit;
+    flex: 1
+}
+
+.wd-card footer {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap
+}
+
+.wl-owing {
+    margin: 0
+}
+
+.wl-sub {
+    display: block;
+    color: #8c90a7;
+    font-size: 11px
+}
+
+.wl-open {
+    margin-left: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px
+}
+
+.wl-grid .pond-save-bar,
+.ac-stack .pond-save-bar {
+    position: static;
+    background: transparent;
+    border: 0;
+    padding: 4px 0 0
+}

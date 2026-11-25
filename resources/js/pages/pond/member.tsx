@@ -1,10 +1,22 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, Coffee, Gift, Heart, MapPin, MessageCircle, Mountain, Settings2, ShieldCheck, Smile } from 'lucide-react';
+import {
+    ArrowLeft,
+    ArrowRight,
+    Coffee,
+    Gift,
+    Heart,
+    MapPin,
+    MessageCircle,
+    Mountain,
+    Settings2,
+    ShieldCheck,
+    Smile,
+} from 'lucide-react';
 import { useState } from 'react';
 import type { PondCard } from '@/components/pond/commerce';
 import type { MemberProfile } from '@/components/pond/data';
 import { InterestIcon, interestTone } from '@/components/pond/interests';
-import { TossBallModal } from '@/components/pond/toss-ball';
+import { CannotReceive, TossBallModal } from '@/components/pond/toss-ball';
 import type { Recipient } from '@/components/pond/toss-ball';
 import { Avatar, hueFor, Modal, PondShell } from '@/components/pond/ui';
 import { edit } from '@/routes/member-profile';
@@ -22,23 +34,49 @@ type Props = {
 
 /** Optional extra sections, shown only once a member has filled them in. */
 const extraSections = [
-    { key: 'fun', title: 'Fun', lead: 'Help support me in enjoying an experience.' },
-    { key: 'boost', title: 'Boost', lead: 'I get by with a little help from my friends.' },
+    {
+        key: 'fun',
+        title: 'Fun',
+        lead: 'Help support me in enjoying an experience.',
+    },
+    {
+        key: 'boost',
+        title: 'Boost',
+        lead: 'I get by with a little help from my friends.',
+    },
     { key: 'about', title: 'A little more about me', lead: '' },
 ] as const;
 
-export default function Member({ member, isOwnProfile, canSendSparkBall, recipient, balls, openToss }: Props) {
-    const [tossCategory, setTossCategory] = useState<string | null>(openToss ? 'dreams' : null);
+export default function Member({
+    member,
+    isOwnProfile,
+    canSendSparkBall,
+    recipient,
+    balls,
+    openToss,
+}: Props) {
+    const [tossCategory, setTossCategory] = useState<string | null>(
+        openToss ? 'dreams' : null,
+    );
     const [sparkInfo, setSparkInfo] = useState(false);
     const firstName = member.name.split(' ')[0];
-    const possessive = firstName.endsWith('s') ? `${firstName}’` : `${firstName}’s`;
-    const emptyNote = isOwnProfile ? 'Nothing here yet. Add something whenever you’re ready.' : `${firstName} hasn’t shared this yet.`;
+    const possessive = firstName.endsWith('s')
+        ? `${firstName}’`
+        : `${firstName}’s`;
+    const emptyNote = isOwnProfile
+        ? 'Nothing here yet. Add something whenever you’re ready.'
+        : `${firstName} hasn’t shared this yet.`;
     const extras = extraSections.filter(({ key }) => member[key]);
 
     return (
         <>
             <Head title={`${member.name} (@${member.username})`} />
-            <PondShell page={member.name} subheading={`Get to know ${firstName}.`} demo={false} hideHeading>
+            <PondShell
+                page={member.name}
+                subheading={`Get to know ${firstName}.`}
+                demo={false}
+                hideHeading
+            >
                 <div className="pp-page">
                     <div className="pp-hero">
                         <Link href={explore()} className="pp-back">
@@ -52,13 +90,26 @@ export default function Member({ member, isOwnProfile, canSendSparkBall, recipie
                     <div className="pp-layout">
                         <aside className="pp-card">
                             <div className="pp-avatar">
-                                <Avatar name={member.name} hue={hueFor(member.id)} size="avatar-profile" src={member.avatar_url} />
-                                <img className="pp-avatar-ball" src="/askupon/balls/golf-lime.svg" alt="" />
+                                <Avatar
+                                    name={member.name}
+                                    hue={hueFor(member.id)}
+                                    size="avatar-profile"
+                                    src={member.avatar_url}
+                                />
+                                <img
+                                    className="pp-avatar-ball"
+                                    src="/askupon/balls/golf-lime.svg"
+                                    alt=""
+                                />
                             </div>
                             <h2>
                                 {member.name}{' '}
                                 {member.open_to_romance && (
-                                    <span className="pond-heart-badge" title="Open to romantic connections" aria-label="Open to romantic connections">
+                                    <span
+                                        className="pond-heart-badge"
+                                        title="Open to romantic connections"
+                                        aria-label="Open to romantic connections"
+                                    >
                                         <Heart size={14} fill="currentColor" />
                                     </span>
                                 )}
@@ -71,13 +122,30 @@ export default function Member({ member, isOwnProfile, canSendSparkBall, recipie
                             )}
                             {!isOwnProfile && (
                                 <div className="pp-quick-actions">
-                                    <Link href={messages.show.url(member.username ?? '')} className="pond-btn pond-btn-primary" data-test="profile-message">
-                                        <MessageCircle size={17} /> Message {firstName}
+                                    <Link
+                                        href={messages.show.url(
+                                            member.username ?? '',
+                                        )}
+                                        className="pond-btn pond-btn-primary"
+                                        data-test="profile-message"
+                                    >
+                                        <MessageCircle size={17} /> Message{' '}
+                                        {firstName}
                                     </Link>
-                                    <button type="button" className="pond-btn pond-btn-outline-dark" onClick={() => setTossCategory('dreams')}>
+                                    <button
+                                        type="button"
+                                        className="pond-btn pond-btn-outline-dark"
+                                        onClick={() =>
+                                            setTossCategory('dreams')
+                                        }
+                                        disabled={!recipient.can_receive}
+                                    >
                                         <Gift size={17} /> Toss a Ball
                                     </button>
                                 </div>
+                            )}
+                            {!isOwnProfile && !recipient.can_receive && (
+                                <CannotReceive member={recipient} />
                             )}
                             <span className="pp-wave" aria-hidden="true" />
 
@@ -85,8 +153,14 @@ export default function Member({ member, isOwnProfile, canSendSparkBall, recipie
                             {member.interests.length > 0 ? (
                                 <ul className="pp-interests">
                                     {member.interests.map((interest) => (
-                                        <li key={interest.value} className={`pp-interest pp-interest-${interestTone(interest.value)}`}>
-                                            <InterestIcon value={interest.value} size={15} />
+                                        <li
+                                            key={interest.value}
+                                            className={`pp-interest pp-interest-${interestTone(interest.value)}`}
+                                        >
+                                            <InterestIcon
+                                                value={interest.value}
+                                                size={15}
+                                            />
                                             {interest.label}
                                         </li>
                                     ))}
@@ -96,35 +170,68 @@ export default function Member({ member, isOwnProfile, canSendSparkBall, recipie
                             )}
 
                             {isOwnProfile && (
-                                <Link href={edit()} className="pond-btn pond-btn-outline-dark pp-edit">
+                                <Link
+                                    href={edit()}
+                                    className="pond-btn pond-btn-outline-dark pp-edit"
+                                >
                                     <Settings2 size={16} /> Edit profile
                                 </Link>
                             )}
                         </aside>
 
                         <div className="pp-stories">
-                            <section className="pp-story pp-story-dream" aria-labelledby="pp-dream">
-                                <Mountain className="pp-story-icon" size={34} aria-hidden="true" />
+                            <section
+                                className="pp-story pp-story-dream"
+                                aria-labelledby="pp-dream"
+                            >
+                                <Mountain
+                                    className="pp-story-icon"
+                                    size={34}
+                                    aria-hidden="true"
+                                />
                                 <div>
-                                    <h2 id="pp-dream">{possessive} Dream Life</h2>
+                                    <h2 id="pp-dream">
+                                        {possessive} Dream Life
+                                    </h2>
                                     <p>{member.dreams || emptyNote}</p>
                                 </div>
                             </section>
 
-                            <section className="pp-story pp-story-small" aria-labelledby="pp-small">
-                                <Coffee className="pp-story-icon" size={34} aria-hidden="true" />
+                            <section
+                                className="pp-story pp-story-small"
+                                aria-labelledby="pp-small"
+                            >
+                                <Coffee
+                                    className="pp-story-icon"
+                                    size={34}
+                                    aria-hidden="true"
+                                />
                                 <div>
-                                    <h2 id="pp-small">A Small Thing That Would Make {isOwnProfile ? 'My' : 'Their'} Day</h2>
+                                    <h2 id="pp-small">
+                                        A Small Thing That Would Make{' '}
+                                        {isOwnProfile ? 'My' : 'Their'} Day
+                                    </h2>
                                     <p>{member.treats || emptyNote}</p>
                                 </div>
                             </section>
 
                             {extras.map(({ key, title, lead }) => (
-                                <section key={key} className="pp-story pp-story-extra">
-                                    <Smile className="pp-story-icon" size={34} aria-hidden="true" />
+                                <section
+                                    key={key}
+                                    className="pp-story pp-story-extra"
+                                >
+                                    <Smile
+                                        className="pp-story-icon"
+                                        size={34}
+                                        aria-hidden="true"
+                                    />
                                     <div>
                                         <h2>{title}</h2>
-                                        {lead && <strong className="pp-lead">{lead}</strong>}
+                                        {lead && (
+                                            <strong className="pp-lead">
+                                                {lead}
+                                            </strong>
+                                        )}
                                         <p>{member[key]}</p>
                                     </div>
                                 </section>
@@ -132,14 +239,39 @@ export default function Member({ member, isOwnProfile, canSendSparkBall, recipie
 
                             {!isOwnProfile && (
                                 <div className="pp-ctas">
-                                    <button type="button" className="pp-cta pp-cta-dream" onClick={() => setTossCategory('dreams')}>
-                                        <img src="/askupon/balls/golf-white.svg" alt="" />
-                                        <span>Buy {possessive} dream life a ball</span>
+                                    <button
+                                        type="button"
+                                        className="pp-cta pp-cta-dream"
+                                        onClick={() =>
+                                            setTossCategory('dreams')
+                                        }
+                                        disabled={!recipient.can_receive}
+                                    >
+                                        <img
+                                            src="/askupon/balls/golf-white.svg"
+                                            alt=""
+                                        />
+                                        <span>
+                                            Buy {possessive} dream life a ball
+                                        </span>
                                         <ArrowRight size={18} />
                                     </button>
-                                    <button type="button" className="pp-cta pp-cta-small" onClick={() => setTossCategory('treats')}>
-                                        <img src="/askupon/balls/golf-gold.svg" alt="" />
-                                        <span>Randomly buy {firstName} one of the small things.</span>
+                                    <button
+                                        type="button"
+                                        className="pp-cta pp-cta-small"
+                                        onClick={() =>
+                                            setTossCategory('treats')
+                                        }
+                                        disabled={!recipient.can_receive}
+                                    >
+                                        <img
+                                            src="/askupon/balls/golf-gold.svg"
+                                            alt=""
+                                        />
+                                        <span>
+                                            Randomly buy {firstName} one of the
+                                            small things.
+                                        </span>
                                         <ArrowRight size={18} />
                                     </button>
                                 </div>
@@ -151,24 +283,41 @@ export default function Member({ member, isOwnProfile, canSendSparkBall, recipie
                         <img src="/askupon/balls/golf-white.svg" alt="" />
                         <div>
                             <h2>How It Works</h2>
-                            <strong>A ball is a simple, fun way to give support.</strong>
+                            <strong>
+                                A ball is a simple, fun way to give support.
+                            </strong>
                             <p>
-                                You can send a ball to help {possessive} big dream (such as land, a project, or a goal) or randomly gift one of the small things that would make{' '}
-                                {isOwnProfile ? 'your' : 'their'} day.
+                                You can send a ball to help {possessive} big
+                                dream (such as land, a project, or a goal) or
+                                randomly gift one of the small things that would
+                                make {isOwnProfile ? 'your' : 'their'} day.
                             </p>
                         </div>
                     </section>
 
                     {!isOwnProfile && (
                         <div className="pp-actions">
-                            <button type="button" className="pp-action pp-action-give" onClick={() => setTossCategory('dreams')}>
+                            <button
+                                type="button"
+                                className="pp-action pp-action-give"
+                                onClick={() => setTossCategory('dreams')}
+                                disabled={!recipient.can_receive}
+                            >
                                 <Gift size={18} /> Toss {firstName} a Ball
                             </button>
-                            <Link href={messages.show.url(member.username ?? '')} className="pp-action" data-test="message-member">
+                            <Link
+                                href={messages.show.url(member.username ?? '')}
+                                className="pp-action"
+                                data-test="message-member"
+                            >
                                 <MessageCircle size={18} /> Message {firstName}
                             </Link>
                             {canSendSparkBall && (
-                                <button type="button" className="pp-action" onClick={() => setSparkInfo(true)}>
+                                <button
+                                    type="button"
+                                    className="pp-action"
+                                    onClick={() => setSparkInfo(true)}
+                                >
                                     <Heart size={18} /> Send a Spark Ball
                                 </button>
                             )}
@@ -179,14 +328,33 @@ export default function Member({ member, isOwnProfile, canSendSparkBall, recipie
                     )}
                 </div>
 
-                {tossCategory && <TossBallModal balls={balls} recipient={recipient} initialCategory={tossCategory} onClose={() => setTossCategory(null)} />}
+                {tossCategory && (
+                    <TossBallModal
+                        balls={balls}
+                        recipient={recipient}
+                        initialCategory={tossCategory}
+                        onClose={() => setTossCategory(null)}
+                    />
+                )}
                 {sparkInfo && (
-                    <Modal title="Spark Balls are coming soon ✨" subtitle={`${firstName} is open to romantic connections.`} onClose={() => setSparkInfo(false)}>
+                    <Modal
+                        title="Spark Balls are coming soon ✨"
+                        subtitle={`${firstName} is open to romantic connections.`}
+                        onClose={() => setSparkInfo(false)}
+                    >
                         <div className="pond-safety-illustration">
                             <ShieldCheck size={30} />
-                            <p>Buying and sending Spark Balls ($33 First Spark, $77 Chemistry, $108 Cosmic Connection) arrives with the giving system. Nothing has been charged.</p>
+                            <p>
+                                Buying and sending Spark Balls ($33 First Spark,
+                                $77 Chemistry, $108 Cosmic Connection) arrives
+                                with the giving system. Nothing has been
+                                charged.
+                            </p>
                         </div>
-                        <button className="pond-btn pond-btn-primary pond-wide" onClick={() => setSparkInfo(false)}>
+                        <button
+                            className="pond-btn pond-btn-primary pond-wide"
+                            onClick={() => setSparkInfo(false)}
+                        >
                             Got it
                         </button>
                     </Modal>

@@ -76,6 +76,16 @@ class UserFactory extends Factory
     }
 
     /**
+     * An adult, who can be tossed a ball and can withdraw from their wallet.
+     */
+    public function adult(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'date_of_birth' => now()->subYears(30)->toDateString(),
+        ]);
+    }
+
+    /**
      * Indicate that the model has two-factor authentication configured.
      */
     public function withTwoFactor(): static

@@ -15,6 +15,7 @@ import {
     Pagination,
     paymentStatuses,
     PaymentsTable,
+    payoutText,
     StatTile,
     StatusBadge,
 } from '@/components/pond/commerce';
@@ -26,11 +27,13 @@ import adminUsers from '@/routes/admin/users';
 type AdminPaymentRow = PaymentRow & {
     gateway_session_id: string | null;
     gateway_payment_id: string | null;
+    payout_failure_message?: string | null;
 };
 
 type Filters = {
     search: string;
     status: string;
+    payout: string;
     pond: number | null;
     period: string;
     from: string;
@@ -61,6 +64,7 @@ function queryFor(filters: Filters) {
     return {
         search: filters.search || undefined,
         status: filters.status || undefined,
+        payout: filters.payout || undefined,
         pond: filters.pond || undefined,
         period: filters.period !== 'all' ? filters.period : undefined,
         from: isCustom ? filters.from || undefined : undefined,
@@ -174,6 +178,22 @@ export default function AdminPayments({
                     </select>
                     <select
                         className="pond-input pd-select"
+                        value={filters.payout}
+                        onChange={(event) =>
+                            applyFilters({ payout: event.target.value })
+                        }
+                        aria-label="Filter by member payout"
+                        data-test="payout-filter"
+                    >
+                        <option value="">Any payout</option>
+                        <option value="attention">Needs attention</option>
+                        <option value="pending">Waiting for wallet</option>
+                        <option value="failed">Failed</option>
+                        <option value="credited">In wallet</option>
+                        <option value="reversed">Taken back</option>
+                    </select>
+                    <select
+                        className="pond-input pd-select"
                         value={filters.pond ?? ''}
                         onChange={(event) =>
                             applyFilters({
@@ -248,6 +268,7 @@ export default function AdminPayments({
                         <PaymentsTable
                             rows={payments.data}
                             showBuyer
+                            showPayout
                             buyerHref={(row) =>
                                 row.user_id
                                     ? adminUsers.show(row.user_id).url
@@ -313,6 +334,53 @@ export default function AdminPayments({
                                     viewing.currency,
                                 )}
                             </DetailRow>
+                            {viewing.presentment_currency &&
+                                viewing.presentment_amount_cents !== null && (
+                                    <DetailRow label="Buyer paid">
+                                        {formatMoney(
+                                            viewing.presentment_amount_cents,
+                                            viewing.presentment_currency,
+                                        )}{' '}
+                                        (converted to{' '}
+                                        {formatMoney(
+                                            viewing.amount_cents,
+                                            viewing.currency,
+                                        )}
+                                        )
+                                    </DetailRow>
+                                )}
+                            {viewing.recipient_id !== null && (
+                                <>
+                                    <DetailRow label="Platform fee">
+                                        {formatMoney(
+                                            viewing.fee_cents,
+                                            viewing.currency,
+                                        )}
+                                    </DetailRow>
+                                    {viewing.processing_fee_cents !== null && (
+                                        <DetailRow label="Processing fee">
+                                            {formatMoney(
+                                                viewing.processing_fee_cents,
+                                                viewing.currency,
+                                            )}
+                                        </DetailRow>
+                                    )}
+                                    <DetailRow label="Member wallet">
+                                        {payoutText(viewing)}
+                                    </DetailRow>
+                                </>
+                            )}
+                            {viewing.dispute_status && (
+                                <DetailRow label="Dispute">
+                                    {viewing.dispute_status.replace(/_/g, ' ')}
+                                </DetailRow>
+                            )}
+                            {viewing.payout_failure_message &&
+                                viewing.payout_status !== 'credited' && (
+                                    <DetailRow label="Payout note">
+                                        {viewing.payout_failure_message}
+                                    </DetailRow>
+                                )}
                             <DetailRow label="Member">
                                 {viewing.user_id ? (
                                     <Link
@@ -364,8 +432,20 @@ export default function AdminPayments({
 
                 {refunding && (
                     <Modal
-                        title={`Refund ${formatMoney(refunding.amount_cents, refunding.currency)}?`}
-                        subtitle={`${refunding.buyer_name} gets the full amount back for ${refunding.pond_name}. This cannot be undone.`}
+                        title={`Refund ${formatMoney(refunding.refund_cents, refunding.currency)}?`}
+                        subtitle={[
+                            `${refunding.buyer_name} gets ${formatMoney(refunding.refund_cents, refunding.currency)} back for ${refunding.pond_name}.`,
+                            refunding.fee_cents > 0
+                                ? `The platform fee of ${formatMoney(refunding.fee_cents, refunding.currency)} is kept.`
+                                : null,
+                            refunding.payout_status === 'credited' &&
+                            refunding.net_cents !== null
+                                ? `${refunding.recipient_name ?? 'The member'}'s share of ${formatMoney(refunding.net_cents, refunding.currency)} is taken back from their wallet.`
+                                : null,
+                            'This cannot be undone.',
+                        ]
+                            .filter(Boolean)
+                            .join(' ')}
                         onClose={() => setRefunding(null)}
                     >
                         <div className="pd-modal-actions">

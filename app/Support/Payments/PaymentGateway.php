@@ -34,9 +34,17 @@ interface PaymentGateway
     public function cancel(PondPurchase $purchase): void;
 
     /**
-     * Return the full amount of a paid purchase to the buyer.
+     * Return money from a paid purchase to the buyer: the full amount, or less when the platform
+     * keeps its fee. Asking twice for the same purchase must refund once.
      *
      * @throws PaymentGatewayException
      */
-    public function refund(PondPurchase $purchase): void;
+    public function refund(PondPurchase $purchase, int $amountCents): void;
+
+    /**
+     * What a paid purchase came to once the provider settled it, including the provider's own fee.
+     *
+     * @throws PaymentGatewayException
+     */
+    public function fetchChargeSettlement(PondPurchase $purchase): ChargeSettlement;
 }

@@ -8,7 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Pond;
 use App\Models\PondPurchase;
 use App\Models\User;
+use App\Notifications\BallReceived;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -59,6 +61,9 @@ class PondController extends Controller
     {
         $user = $request->user();
 
+        // Seeing the balls is how a member takes in the news that someone tossed them one.
+        $user->unreadNotifications()->where('type', BallReceived::class)->update(['read_at' => now()]);
+
         return Inertia::render('pond/member/my-ponds', [
             'tossed' => $user->pondPurchases()
                 ->with(['pond', 'recipient'])
@@ -75,7 +80,8 @@ class PondController extends Controller
                 ->latest('paid_at')
                 ->get()
                 ->map(fn (PondPurchase $purchase): array => [
-                    ...$purchase->toHistoryRow(),
+                    // The giver's email stays private from the member who receives the ball.
+                    ...Arr::except($purchase->toHistoryRow(), ['buyer_email']),
                     'pond' => $purchase->pond->toCard(),
                 ]),
         ]);

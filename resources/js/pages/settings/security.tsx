@@ -1,34 +1,28 @@
-import { Form, Head } from '@inertiajs/react';
-import { ShieldCheck } from 'lucide-react';
+import { Form, Head, Link } from '@inertiajs/react';
+import { KeyRound, ShieldCheck, ShieldOff } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
-import Heading from '@/components/heading';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
+import { PondShell } from '@/components/pond/ui';
 import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
-import { edit } from '@/routes/security';
+import { edit as editAccount } from '@/routes/member-account';
 import { disable, enable } from '@/routes/two-factor';
 
 type Props = {
     canManageTwoFactor?: boolean;
     requiresConfirmation?: boolean;
     twoFactorEnabled?: boolean;
-    passwordRules: string;
 };
 
+/**
+ * Two-factor authentication, inside the member's or admin's own dashboard so nobody is sent
+ * out to a plain page while setting it up.
+ */
 export default function Security({
     canManageTwoFactor = false,
     requiresConfirmation = false,
     twoFactorEnabled = false,
-    passwordRules,
 }: Props) {
-    const passwordInput = useRef<HTMLInputElement>(null);
-    const currentPasswordInput = useRef<HTMLInputElement>(null);
-
     const {
         qrCodeSvg,
         hasSetupData,
@@ -54,157 +48,61 @@ export default function Security({
     return (
         <>
             <Head title="Security settings" />
-
-            <h1 className="sr-only">Security settings</h1>
-
-            <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title="Update password"
-                    description="Ensure your account is using a long, random password to stay secure"
-                />
-
-                <Form
-                    {...SecurityController.update.form()}
-                    options={{
-                        preserveScroll: true,
-                    }}
-                    resetOnError={[
-                        'password',
-                        'password_confirmation',
-                        'current_password',
-                    ]}
-                    resetOnSuccess
-                    onError={(errors) => {
-                        if (errors.password) {
-                            passwordInput.current?.focus();
-                        }
-
-                        if (errors.current_password) {
-                            currentPasswordInput.current?.focus();
-                        }
-                    }}
-                    className="space-y-6"
-                >
-                    {({ errors, processing }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="current_password">
-                                    Current password
-                                </Label>
-
-                                <PasswordInput
-                                    id="current_password"
-                                    ref={currentPasswordInput}
-                                    name="current_password"
-                                    className="mt-1 block w-full"
-                                    autoComplete="current-password"
-                                    placeholder="Current password"
-                                />
-
-                                <InputError message={errors.current_password} />
+            <PondShell
+                page="Security"
+                subheading="Keep your account safe with a second step at login."
+                demo={false}
+            >
+                <div className="ac-stack">
+                    {canManageTwoFactor && (
+                        <section
+                            className="pond-panel"
+                            data-test="two-factor-panel"
+                        >
+                            <div className="pond-panel-header">
+                                <div>
+                                    <h2>Two-factor authentication</h2>
+                                    <p>
+                                        When it is on, you are asked for a
+                                        secure code from an authenticator app on
+                                        your phone each time you log in.
+                                    </p>
+                                </div>
                             </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="password">New password</Label>
-
-                                <PasswordInput
-                                    id="password"
-                                    ref={passwordInput}
-                                    name="password"
-                                    className="mt-1 block w-full"
-                                    autoComplete="new-password"
-                                    placeholder="New password"
-                                    passwordrules={passwordRules}
-                                />
-
-                                <InputError message={errors.password} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">
-                                    Confirm password
-                                </Label>
-
-                                <PasswordInput
-                                    id="password_confirmation"
-                                    name="password_confirmation"
-                                    className="mt-1 block w-full"
-                                    autoComplete="new-password"
-                                    placeholder="Confirm password"
-                                    passwordrules={passwordRules}
-                                />
-
-                                <InputError
-                                    message={errors.password_confirmation}
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                                <Button
-                                    disabled={processing}
-                                    data-test="update-password-button"
+                            <div className="ac-security-row">
+                                <span
+                                    className={`ac-pill ${twoFactorEnabled ? 'is-on' : ''}`}
                                 >
-                                    Save password
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
-            </div>
-
-            {canManageTwoFactor && (
-                <div className="space-y-6">
-                    <Heading
-                        variant="small"
-                        title="Two-factor authentication"
-                        description="Manage your two-factor authentication settings"
-                    />
-                    {twoFactorEnabled ? (
-                        <div className="flex flex-col items-start justify-start space-y-4">
-                            <p className="text-sm text-muted-foreground">
-                                You will be prompted for a secure, random pin
-                                during login, which you can retrieve from the
-                                TOTP-supported application on your phone.
-                            </p>
-
-                            <div className="relative inline">
-                                <Form {...disable.form()}>
-                                    {({ processing }) => (
-                                        <Button
-                                            variant="destructive"
-                                            type="submit"
-                                            disabled={processing}
-                                        >
-                                            Disable 2FA
-                                        </Button>
+                                    {twoFactorEnabled ? (
+                                        <ShieldCheck size={15} />
+                                    ) : (
+                                        <ShieldOff size={15} />
                                     )}
-                                </Form>
-                            </div>
+                                    {twoFactorEnabled ? 'On' : 'Off'}
+                                </span>
 
-                            <TwoFactorRecoveryCodes
-                                recoveryCodesList={recoveryCodesList}
-                                fetchRecoveryCodes={fetchRecoveryCodes}
-                                errors={errors}
-                            />
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-start justify-start space-y-4">
-                            <p className="text-sm text-muted-foreground">
-                                When you enable two-factor authentication, you
-                                will be prompted for a secure pin during login.
-                                This pin can be retrieved from a TOTP-supported
-                                application on your phone.
-                            </p>
-
-                            <div>
-                                {hasSetupData ? (
-                                    <Button
+                                {twoFactorEnabled ? (
+                                    <Form {...disable.form()}>
+                                        {({ processing }) => (
+                                            <button
+                                                type="submit"
+                                                className="pond-btn ac-danger-btn"
+                                                disabled={processing}
+                                                data-test="disable-two-factor"
+                                            >
+                                                Disable 2FA
+                                            </button>
+                                        )}
+                                    </Form>
+                                ) : hasSetupData ? (
+                                    <button
+                                        type="button"
+                                        className="pond-btn pond-btn-primary"
                                         onClick={() => setShowSetupModal(true)}
                                     >
-                                        <ShieldCheck />
-                                        Continue setup
-                                    </Button>
+                                        <ShieldCheck size={16} /> Continue setup
+                                    </button>
                                 ) : (
                                     <Form
                                         {...enable.form()}
@@ -213,41 +111,61 @@ export default function Security({
                                         }
                                     >
                                         {({ processing }) => (
-                                            <Button
+                                            <button
                                                 type="submit"
+                                                className="pond-btn pond-btn-primary"
                                                 disabled={processing}
+                                                data-test="enable-two-factor"
                                             >
-                                                Enable 2FA
-                                            </Button>
+                                                <ShieldCheck size={16} /> Enable
+                                                2FA
+                                            </button>
                                         )}
                                     </Form>
                                 )}
                             </div>
-                        </div>
+
+                            {twoFactorEnabled && (
+                                <TwoFactorRecoveryCodes
+                                    recoveryCodesList={recoveryCodesList}
+                                    fetchRecoveryCodes={fetchRecoveryCodes}
+                                    errors={errors}
+                                />
+                            )}
+
+                            <TwoFactorSetupModal
+                                isOpen={showSetupModal}
+                                onClose={() => setShowSetupModal(false)}
+                                requiresConfirmation={requiresConfirmation}
+                                twoFactorEnabled={twoFactorEnabled}
+                                qrCodeSvg={qrCodeSvg}
+                                manualSetupKey={manualSetupKey}
+                                clearSetupData={clearSetupData}
+                                fetchSetupData={fetchSetupData}
+                                errors={errors}
+                            />
+                        </section>
                     )}
 
-                    <TwoFactorSetupModal
-                        isOpen={showSetupModal}
-                        onClose={() => setShowSetupModal(false)}
-                        requiresConfirmation={requiresConfirmation}
-                        twoFactorEnabled={twoFactorEnabled}
-                        qrCodeSvg={qrCodeSvg}
-                        manualSetupKey={manualSetupKey}
-                        clearSetupData={clearSetupData}
-                        fetchSetupData={fetchSetupData}
-                        errors={errors}
-                    />
+                    <section className="pond-panel">
+                        <div className="pond-panel-header">
+                            <div>
+                                <h2>Password</h2>
+                                <p>
+                                    You change your password in My Account,
+                                    together with your other details.
+                                </p>
+                            </div>
+                        </div>
+                        <Link
+                            href={editAccount()}
+                            className="pond-btn pond-btn-outline-dark"
+                        >
+                            <KeyRound size={16} /> Go to My Account
+                        </Link>
+                    </section>
                 </div>
-            )}
+            </PondShell>
         </>
     );
 }
-
-Security.layout = {
-    breadcrumbs: [
-        {
-            title: 'Security settings',
-            href: edit(),
-        },
-    ],
-};

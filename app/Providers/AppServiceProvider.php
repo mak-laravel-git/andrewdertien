@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\Payments\FeeSettings;
 use App\Support\Payments\StripeSettings;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -17,6 +18,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(StripeSettings::class);
+        $this->app->singleton(FeeSettings::class);
     }
 
     /**

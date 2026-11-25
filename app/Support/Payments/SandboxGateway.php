@@ -35,8 +35,23 @@ class SandboxGateway implements PaymentGateway
         //
     }
 
-    public function refund(PondPurchase $purchase): void
+    public function refund(PondPurchase $purchase, int $amountCents): void
     {
         //
+    }
+
+    /**
+     * The sandbox has no real fees, so it uses the same estimate the toss screens show.
+     */
+    public function fetchChargeSettlement(PondPurchase $purchase): ChargeSettlement
+    {
+        return new ChargeSettlement(
+            chargeId: 'ch_sandbox_'.Str::lower($purchase->reference),
+            grossCents: $purchase->amount_cents,
+            processingFeeCents: FeeCalculator::processingEstimateCents($purchase->amount_cents),
+            currency: $purchase->currency,
+            buyerPaidCents: $purchase->amount_cents,
+            buyerCurrency: $purchase->currency,
+        );
     }
 }

@@ -10,7 +10,8 @@ import {
 import { useState } from 'react';
 import { formatMoney, PondArt } from '@/components/pond/commerce';
 import type { PondCard } from '@/components/pond/commerce';
-import { usePaymentMode } from '@/components/pond/payment-mode';
+import { feeBreakdown, plainDollars } from '@/components/pond/fees';
+import { useFeeRules, usePaymentMode } from '@/components/pond/payment-mode';
 import { Avatar, hueFor, Modal } from '@/components/pond/ui';
 import memberCheckout from '@/routes/member/checkout';
 
@@ -21,7 +22,25 @@ export type Recipient = {
     username: string | null;
     avatar_url: string | null;
     ask: string | null;
+    /** False for a member known to be under 18, who cannot be tossed a ball. */
+    can_receive: boolean;
 };
+
+/**
+ * Shown instead of the toss when a ball cannot be tossed to the member (they are under 18).
+ */
+export function CannotReceive({ member }: { member: Recipient }) {
+    const firstName = member.name.split(' ')[0];
+
+    return (
+        <div className="tb-blocked" role="status" data-test="toss-blocked">
+            <p>
+                A ball cannot be tossed to <strong>{firstName}</strong> right
+                now.
+            </p>
+        </div>
+    );
+}
 
 /**
  * Who the ball is for. Tossing "into the Pond" needs no one in particular; a member can also be
@@ -46,6 +65,7 @@ function RecipientPicker({
                 (member.username ?? '').toLowerCase().includes(term) ||
                 (member.ask ?? '').toLowerCase().includes(term),
         )
+        .sort((a, b) => Number(b.can_receive) - Number(a.can_receive))
         .slice(0, 5);
 
     if (chosen) {
@@ -103,6 +123,9 @@ function RecipientPicker({
                             <button
                                 type="button"
                                 onClick={() => onChoose(member)}
+                                className={
+                                    member.can_receive ? '' : 'tb-unavailable'
+                                }
                             >
                                 <Avatar
                                     name={member.name}
@@ -112,7 +135,15 @@ function RecipientPicker({
                                 />
                                 <span>
                                     <strong>{member.name}</strong>
-                                    {member.ask && <small>{member.ask}</small>}
+                                    {member.can_receive ? (
+                                        member.ask && (
+                                            <small>{member.ask}</small>
+                                        )
+                                    ) : (
+                                        <small>
+                                            Not set up to receive balls yet
+                                        </small>
+                                    )}
                                 </span>
                             </button>
                         </li>
@@ -148,13 +179,18 @@ export function TossBallModal({
     onClose: () => void;
 }) {
     const payments = usePaymentMode();
+    const fees = useFeeRules();
+    const minimumDollars = fees.minimum_toss_cents / 100;
+    const minimumText = `$${plainDollars(fees.minimum_toss_cents)}`;
     const firstBall =
         balls.find((ball) => ball.id === initialBallId) ??
         balls.find((ball) => ball.category === initialCategory) ??
         balls[0];
     const [ball, setBall] = useState<PondCard | undefined>(firstBall);
     const [amount, setAmount] = useState(
-        firstBall ? dollars(firstBall.price_cents) : '',
+        firstBall
+            ? dollars(Math.max(firstBall.price_cents, fees.minimum_toss_cents))
+            : '',
     );
     const [isOther, setIsOther] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -180,7 +216,7 @@ export function TossBallModal({
 
     const chooseBall = (next: PondCard) => {
         setBall(next);
-        setAmount(dollars(next.price_cents));
+        setAmount(dollars(Math.max(next.price_cents, fees.minimum_toss_cents)));
         setIsOther(false);
         setError(null);
     };
@@ -193,16 +229,21 @@ export function TossBallModal({
 
     const amountNumber = Number(amount);
     const isValid =
-        amount !== '' && Number.isFinite(amountNumber) && amountNumber >= 1;
+        amount !== '' &&
+        Number.isFinite(amountNumber) &&
+        amountNumber >= minimumDollars;
+    const minimumMessage = `A ball can be any amount from ${minimumText}.`;
     const shownError =
-        error ??
-        (amount !== '' && !isValid
-            ? 'A ball can be any amount from $1.'
-            : null);
+        error ?? (amount !== '' && !isValid ? minimumMessage : null);
+    const blocked = chosen !== null && !chosen.can_receive;
+    const split =
+        isValid && chosen && !blocked
+            ? feeBreakdown(Math.round(amountNumber * 100), fees)
+            : null;
 
     const toss = () => {
         if (!isValid) {
-            setError('A ball can be any amount from $1.');
+            setError(minimumMessage);
 
             return;
         }
@@ -309,29 +350,31 @@ export function TossBallModal({
                 role="radiogroup"
                 aria-label="Choose an amount"
             >
-                {ball.suggested_amounts.map((cents) => {
-                    const isSelected =
-                        !isOther && Number(amount) === cents / 100;
+                {ball.suggested_amounts
+                    .filter((cents) => cents >= fees.minimum_toss_cents)
+                    .map((cents) => {
+                        const isSelected =
+                            !isOther && Number(amount) === cents / 100;
 
-                    return (
-                        <button
-                            type="button"
-                            key={cents}
-                            role="radio"
-                            aria-checked={isSelected}
-                            className={`tb-amount ${isSelected ? 'selected' : ''}`}
-                            onClick={() => chooseAmount(cents)}
-                        >
-                            {formatMoney(cents, ball.currency).replace(
-                                /\.00$/,
-                                '',
-                            )}
-                            {cents === ball.price_cents && (
-                                <small>Suggested</small>
-                            )}
-                        </button>
-                    );
-                })}
+                        return (
+                            <button
+                                type="button"
+                                key={cents}
+                                role="radio"
+                                aria-checked={isSelected}
+                                className={`tb-amount ${isSelected ? 'selected' : ''}`}
+                                onClick={() => chooseAmount(cents)}
+                            >
+                                {formatMoney(cents, ball.currency).replace(
+                                    /\.00$/,
+                                    '',
+                                )}
+                                {cents === ball.price_cents && (
+                                    <small>Suggested</small>
+                                )}
+                            </button>
+                        );
+                    })}
                 <button
                     type="button"
                     role="radio"
@@ -352,7 +395,7 @@ export function TossBallModal({
                     <input
                         type="number"
                         inputMode="decimal"
-                        min={1}
+                        min={minimumDollars}
                         step="0.01"
                         autoFocus
                         value={amount}
@@ -360,10 +403,31 @@ export function TossBallModal({
                             setAmount(event.target.value);
                             setError(null);
                         }}
-                        placeholder="Any amount from 1"
+                        placeholder={`Any amount from ${plainDollars(fees.minimum_toss_cents)}`}
                         aria-label="Amount in dollars"
                     />
                 </label>
+            )}
+
+            {fees.adaptive_pricing && (
+                <p className="tb-currency-note" data-test="currency-note">
+                    Amounts are in US dollars. On the payment page you may be
+                    able to pay in your own currency.
+                </p>
+            )}
+
+            {blocked && chosen && <CannotReceive member={chosen} />}
+
+            {split && chosen && (
+                <p className="tb-fee-note" data-test="toss-fee-note">
+                    {chosen.name.split(' ')[0]} gets about{' '}
+                    <strong>
+                        {formatMoney(split.memberEstimateCents, ball.currency)}
+                    </strong>{' '}
+                    in their wallet, after the platform fee (
+                    {formatMoney(split.platformFeeCents, ball.currency)}) and
+                    Stripe&rsquo;s payment processing fee.
+                </p>
             )}
 
             {shownError && (
@@ -397,7 +461,7 @@ export function TossBallModal({
             <button
                 className="pond-btn pond-btn-primary pond-wide"
                 onClick={toss}
-                disabled={isRedirecting || !isValid}
+                disabled={isRedirecting || !isValid || blocked}
             >
                 {isRedirecting ? (
                     <>

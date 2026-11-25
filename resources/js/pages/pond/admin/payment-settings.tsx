@@ -13,6 +13,7 @@ import {
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { toast } from 'sonner';
+import { feeBreakdown } from '@/components/pond/fees';
 import { paymentModeText } from '@/components/pond/payment-mode';
 import type { PaymentMode } from '@/components/pond/payment-mode';
 import { Modal, PondShell } from '@/components/pond/ui';
@@ -34,6 +35,17 @@ type Props = {
         is_ready: boolean;
     };
     webhook: { url: string; events: string[] };
+    fees: {
+        platform_fee_percent: number;
+        minimum_fee: number;
+        minimum_toss: number;
+        minimum_withdrawal: number;
+        wallet_hold_days: number;
+        adaptive_pricing: boolean;
+        processing_percent: number;
+        processing_fixed_cents: number;
+        maximum_percent: number;
+    };
     canEdit: boolean;
 };
 
@@ -114,10 +126,221 @@ function DetectedMode({ value }: { value: string }) {
     );
 }
 
+/** The platform fee and toss limits. They apply to tosses made after saving. */
+function FeesPanel({
+    fees,
+    canEdit,
+}: {
+    fees: Props['fees'];
+    canEdit: boolean;
+}) {
+    const form = useForm({
+        platform_fee_percent: String(fees.platform_fee_percent),
+        minimum_fee: String(fees.minimum_fee),
+        minimum_toss: String(fees.minimum_toss),
+        minimum_withdrawal: String(fees.minimum_withdrawal),
+        wallet_hold_days: String(fees.wallet_hold_days),
+        adaptive_pricing: fees.adaptive_pricing,
+    });
+
+    const exampleCents = 5000;
+    const percent = Number(form.data.platform_fee_percent);
+    const example = feeBreakdown(exampleCents, {
+        percent: Number.isFinite(percent) ? percent : 0,
+        minimum_fee_cents: Math.round(Number(form.data.minimum_fee) * 100) || 0,
+        processing_percent: fees.processing_percent,
+        processing_fixed_cents: fees.processing_fixed_cents,
+    });
+    const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+        form.submit(adminStripe.fees.update(), { preserveScroll: true });
+    };
+
+    return (
+        <form onSubmit={submit} className="pond-panel" data-test="fees-panel">
+            <div className="pond-panel-header">
+                <div>
+                    <h2>Fees &amp; limits</h2>
+                    <p>
+                        The platform keeps a share of every ball tossed to a
+                        member. A ball tossed into the Pond with no member goes
+                        entirely to the platform. Changes apply to new tosses
+                        only.
+                    </p>
+                </div>
+            </div>
+
+            <div className="fl-grid">
+                <label className="pond-form-label">
+                    Platform fee (%)
+                    <input
+                        className="pond-input"
+                        type="number"
+                        min={0}
+                        max={fees.maximum_percent}
+                        step="0.01"
+                        inputMode="decimal"
+                        value={form.data.platform_fee_percent}
+                        onChange={(event) =>
+                            form.setData(
+                                'platform_fee_percent',
+                                event.target.value,
+                            )
+                        }
+                        disabled={!canEdit}
+                        data-test="platform-fee-percent"
+                    />
+                    <span className="fl-hint">
+                        0 to {fees.maximum_percent}%
+                    </span>
+                    <FieldError message={form.errors.platform_fee_percent} />
+                </label>
+                <label className="pond-form-label">
+                    Minimum fee ($)
+                    <input
+                        className="pond-input"
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        inputMode="decimal"
+                        value={form.data.minimum_fee}
+                        onChange={(event) =>
+                            form.setData('minimum_fee', event.target.value)
+                        }
+                        disabled={!canEdit}
+                        data-test="minimum-fee"
+                    />
+                    <span className="fl-hint">
+                        Used when the percentage is smaller than this.
+                    </span>
+                    <FieldError message={form.errors.minimum_fee} />
+                </label>
+                <label className="pond-form-label">
+                    Smallest toss ($)
+                    <input
+                        className="pond-input"
+                        type="number"
+                        min={1}
+                        step="0.01"
+                        inputMode="decimal"
+                        value={form.data.minimum_toss}
+                        onChange={(event) =>
+                            form.setData('minimum_toss', event.target.value)
+                        }
+                        disabled={!canEdit}
+                        data-test="minimum-toss"
+                    />
+                    <span className="fl-hint">
+                        The least a ball can be tossed for.
+                    </span>
+                    <FieldError message={form.errors.minimum_toss} />
+                </label>
+            </div>
+
+            <div className="fl-grid">
+                <label className="pond-form-label">
+                    Smallest withdrawal ($)
+                    <input
+                        className="pond-input"
+                        type="number"
+                        min={1}
+                        step="0.01"
+                        inputMode="decimal"
+                        value={form.data.minimum_withdrawal}
+                        onChange={(event) =>
+                            form.setData(
+                                'minimum_withdrawal',
+                                event.target.value,
+                            )
+                        }
+                        disabled={!canEdit}
+                        data-test="minimum-withdrawal"
+                    />
+                    <span className="fl-hint">
+                        The least a member can ask to be paid out.
+                    </span>
+                    <FieldError message={form.errors.minimum_withdrawal} />
+                </label>
+                <label className="pond-form-label">
+                    Hold new earnings for (days)
+                    <input
+                        className="pond-input"
+                        type="number"
+                        min={0}
+                        max={90}
+                        step="1"
+                        inputMode="numeric"
+                        value={form.data.wallet_hold_days}
+                        onChange={(event) =>
+                            form.setData('wallet_hold_days', event.target.value)
+                        }
+                        disabled={!canEdit}
+                        data-test="wallet-hold-days"
+                    />
+                    <span className="fl-hint">
+                        0 means earnings can be withdrawn at once. A few days
+                        protects you from refunds and disputes.
+                    </span>
+                    <FieldError message={form.errors.wallet_hold_days} />
+                </label>
+            </div>
+
+            <label className="pond-toggle-line">
+                <span>
+                    Let buyers abroad pay in their own currency
+                    <span className="fl-hint">
+                        Balls stay priced in dollars and you always receive
+                        dollars. Stripe converts, and the buyer pays
+                        Stripe&rsquo;s conversion fee (about 2 to 4%), not you
+                        or the member.
+                    </span>
+                </span>
+                <input
+                    type="checkbox"
+                    checked={form.data.adaptive_pricing}
+                    disabled={!canEdit}
+                    onChange={(event) =>
+                        form.setData('adaptive_pricing', event.target.checked)
+                    }
+                    data-test="adaptive-pricing"
+                />
+                <span className="pond-toggle-ui" />
+            </label>
+            <FieldError message={form.errors.adaptive_pricing} />
+
+            <div className="fl-example" data-test="fee-example">
+                Example: a <strong>{money(exampleCents)}</strong> ball tossed to
+                a member. The platform keeps{' '}
+                <strong>{money(example.platformFeeCents)}</strong>, Stripe takes
+                about {money(example.processingEstimateCents)} to process it,
+                and the member receives about{' '}
+                <strong>{money(example.memberEstimateCents)}</strong>.
+            </div>
+
+            {canEdit && (
+                <div className="pd-settings-actions">
+                    <button
+                        type="submit"
+                        className="pond-btn pond-btn-primary"
+                        disabled={form.processing}
+                        data-test="save-fees"
+                    >
+                        <Save size={16} />{' '}
+                        {form.processing ? 'Saving…' : 'Save fees & limits'}
+                    </button>
+                </div>
+            )}
+        </form>
+    );
+}
+
 export default function PaymentSettings({
     stripe,
     gateway,
     webhook,
+    fees,
     canEdit,
 }: Props) {
     const [isRemoving, setIsRemoving] = useState(false);
@@ -412,6 +635,8 @@ export default function PaymentSettings({
                         </div>
                     </section>
                 </form>
+
+                <FeesPanel fees={fees} canEdit={canEdit} />
 
                 {isRemoving && (
                     <Modal

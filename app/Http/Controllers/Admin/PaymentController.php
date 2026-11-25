@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\PayoutStatus;
 use App\Enums\PurchaseStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Pond;
@@ -37,6 +38,7 @@ class PaymentController extends Controller
                     ...$purchase->toHistoryRow(),
                     'gateway_session_id' => $purchase->gateway_session_id,
                     'gateway_payment_id' => $purchase->gateway_payment_id,
+                    'payout_failure_message' => $purchase->payout_failure_message,
                 ]),
             'totals' => [
                 'paid_cents' => $this->sumFor($request, $period, PurchaseStatus::PAID),
@@ -49,6 +51,7 @@ class PaymentController extends Controller
                 'search' => $this->search($request),
                 'status' => $status?->value ?? '',
                 'pond' => $request->integer('pond') ?: null,
+                'payout' => (string) $request->query('payout'),
                 ...$period->toFilters(),
             ],
         ]);
@@ -74,7 +77,7 @@ class PaymentController extends Controller
             // The byte order mark lets Excel read names with accents correctly.
             fwrite($output, "\xEF\xBB\xBF");
 
-            fputcsv($output, ['Reference', 'Date', 'Paid at', 'Refunded at', 'Ball', 'Member', 'Email', 'Recipient', 'Amount', 'Currency', 'Status', 'Mode', 'Gateway', 'Payment ID', 'Note']);
+            fputcsv($output, ['Reference', 'Date', 'Paid at', 'Refunded at', 'Ball', 'Member', 'Email', 'Recipient', 'Amount', 'Currency', 'Buyer paid', 'Buyer currency', 'Platform fee', 'Processing fee', 'Member share', 'Payout status', 'Refunded to buyer', 'Dispute', 'Status', 'Mode', 'Gateway', 'Payment ID', 'Note']);
 
             $query->chunkById(500, function ($purchases) use ($output): void {
                 foreach ($purchases as $purchase) {
@@ -89,6 +92,14 @@ class PaymentController extends Controller
                         $purchase->recipient_name,
                         number_format($purchase->amount_cents / 100, 2, '.', ''),
                         strtoupper($purchase->currency),
+                        $purchase->paidInOtherCurrency() ? number_format($purchase->presentment_amount_cents / 100, 2, '.', '') : null,
+                        $purchase->paidInOtherCurrency() ? strtoupper($purchase->presentment_currency) : null,
+                        $purchase->recipient_id ? number_format($purchase->fee_cents / 100, 2, '.', '') : null,
+                        $purchase->processing_fee_cents !== null ? number_format($purchase->processing_fee_cents / 100, 2, '.', '') : null,
+                        $purchase->net_cents !== null ? number_format($purchase->net_cents / 100, 2, '.', '') : null,
+                        $purchase->payout_status->value,
+                        $purchase->refunded_cents !== null ? number_format($purchase->refunded_cents / 100, 2, '.', '') : null,
+                        $purchase->dispute_status,
                         $purchase->status->value,
                         $purchase->is_test ? 'Test' : 'Live',
                         $purchase->gateway,
@@ -107,7 +118,11 @@ class PaymentController extends Controller
         try {
             $checkout->refund($purchase);
 
-            Inertia::flash('toast', ['type' => 'success', 'message' => "{$purchase->reference} refunded."]);
+            $purchase->refresh();
+            $kept = $purchase->fee_cents > 0 ? ' The platform fee of $'.number_format($purchase->fee_cents / 100, 2).' was kept.' : '';
+            $taken = $purchase->payout_status === PayoutStatus::REVERSED ? ' The member\'s wallet was debited.' : '';
+
+            Inertia::flash('toast', ['type' => 'success', 'message' => "{$purchase->reference} refunded: {$purchase->buyer_name} gets $".number_format(($purchase->refunded_cents ?? 0) / 100, 2).' back.'.$kept.$taken]);
         } catch (PaymentGatewayException $exception) {
             Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);
         }
@@ -124,9 +139,12 @@ class PaymentController extends Controller
     {
         $search = $this->search($request);
         $pondId = $request->integer('pond') ?: null;
+        $payout = (string) $request->query('payout');
 
         return $period->apply(PondPurchase::query())
             ->when($pondId, fn ($query) => $query->where('pond_id', $pondId))
+            ->when($payout === 'attention', fn ($query) => $query->needingAttention())
+            ->when(PayoutStatus::tryFrom($payout), fn ($query, PayoutStatus $status) => $query->where('payout_status', $status))
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('buyer_name', 'like', "%{$search}%")

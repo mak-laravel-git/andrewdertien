@@ -34,6 +34,8 @@ export type FeedPost = {
     body: string;
     time: string | null;
     author: MemberChip;
+    /** Whether a ball can be tossed to the author yet (members under 18 cannot be tossed one). */
+    author_can_receive: boolean;
     reactions: {
         total: number;
         counts: Record<string, number>;
@@ -330,7 +332,7 @@ export default function CommunityPostCard({ post }: { post: FeedPost }) {
                         <Send size={17} /> Message
                     </Link>
                 )}
-                {canReachAuthor && (
+                {canReachAuthor && post.author_can_receive && (
                     <Link
                         href={showMember(
                             { username: post.author.username! },

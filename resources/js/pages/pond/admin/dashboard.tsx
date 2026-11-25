@@ -35,6 +35,21 @@ type Props = {
         ponds_on_frontend: number;
     };
     currency: string;
+    money: {
+        fees_cents: number;
+        pond_cents: number;
+        owed_cents: number;
+        withdrawals_waiting_cents: number;
+        withdrawals_waiting_count: number;
+        withdrawn_cents: number;
+        negative_wallets: number;
+        waiting_cents: number;
+        waiting_count: number;
+        processing_cents: number;
+        failed_payouts: number;
+        open_disputes: number;
+    };
+    attention: (PaymentRow & { payout_failure_message: string | null })[];
     revenueByMonth: { month: string; revenue_cents: number }[];
     recentPayments: PaymentRow[];
     topPonds: {
@@ -157,6 +172,8 @@ function GatewayNotice({ gateway }: { gateway: Props['gateway'] }) {
 export default function AdminDashboard({
     stats,
     currency,
+    money,
+    attention,
     revenueByMonth,
     recentPayments,
     topPonds,
@@ -209,6 +226,90 @@ export default function AdminDashboard({
                         tone="green"
                     />
                 </div>
+
+                <div className="ad-money" data-test="money-stats">
+                    <StatTile
+                        icon={CreditCard}
+                        label="Platform fees earned"
+                        value={formatMoney(money.fees_cents, currency)}
+                        hint="Kept from balls tossed to members"
+                        tone="green"
+                    />
+                    <StatTile
+                        icon={Waves}
+                        label="Balls tossed into the Pond"
+                        value={formatMoney(money.pond_cents, currency)}
+                        hint="Goes wholly to the platform"
+                        tone="green"
+                    />
+                    <StatTile
+                        icon={Users}
+                        label="Owed to members"
+                        value={formatMoney(money.owed_cents, currency)}
+                        hint={`In members' wallets · ${formatMoney(money.withdrawn_cents, currency)} withdrawn so far`}
+                    />
+                    <StatTile
+                        icon={ShoppingBag}
+                        label="Withdrawals to pay"
+                        value={formatMoney(
+                            money.withdrawals_waiting_cents,
+                            currency,
+                        )}
+                        hint={`${money.withdrawals_waiting_count} ${money.withdrawals_waiting_count === 1 ? 'request' : 'requests'} waiting for you`}
+                        tone="pink"
+                    />
+                </div>
+
+                {attention.length > 0 && (
+                    <section className="pond-panel" data-test="needs-attention">
+                        <div className="pond-panel-header">
+                            <div>
+                                <h2>Needs attention</h2>
+                                <p>
+                                    {money.failed_payouts} failed{' '}
+                                    {money.failed_payouts === 1
+                                        ? 'payout'
+                                        : 'payouts'}
+                                    , {money.open_disputes} open{' '}
+                                    {money.open_disputes === 1
+                                        ? 'dispute'
+                                        : 'disputes'}
+                                    .
+                                </p>
+                            </div>
+                            <Link
+                                href={adminPayments.index({
+                                    query: { payout: 'attention' },
+                                })}
+                            >
+                                See all <ArrowRight size={16} />
+                            </Link>
+                        </div>
+                        {attention.map((row) => (
+                            <div
+                                className="ad-attention-row"
+                                key={row.reference}
+                            >
+                                <span>
+                                    <strong>{row.pond_name}</strong> from{' '}
+                                    {row.buyer_name}
+                                    <small>
+                                        {row.dispute_status
+                                            ? `Dispute: ${row.dispute_status.replace(/_/g, ' ')}`
+                                            : (row.payout_failure_message ??
+                                              'Member payout failed')}
+                                    </small>
+                                </span>
+                                <strong>
+                                    {formatMoney(
+                                        row.amount_cents,
+                                        row.currency,
+                                    )}
+                                </strong>
+                            </div>
+                        ))}
+                    </section>
+                )}
 
                 <div className="pd-grid-2">
                     <section className="pond-panel">

@@ -19,8 +19,12 @@ createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
+            // Pages that draw their own dashboard (member or admin). Setting up two-factor and
+            // confirming a password are among them, so nobody is sent out to a plain page.
             case name === 'welcome':
             case name.startsWith('pond/'):
+            case name === 'settings/security':
+            case name === 'auth/confirm-password':
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;

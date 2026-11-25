@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Enums\PurchaseStatus;
 use App\Models\Pond;
 use App\Models\User;
+use App\Notifications\BallReceived;
+use App\Support\Wallet\Wallet;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -46,6 +48,10 @@ class DashboardController extends Controller
                 'completed_payments' => (clone $paid)->count(),
             ],
             'currency' => config('payments.currency'),
+            // Balls tossed to the member that they have not looked at yet.
+            'newBalls' => $user->unreadNotifications()->where('type', BallReceived::class)->count(),
+            // What the member has earned and can withdraw.
+            'wallet' => app(Wallet::class)->summary($user),
             'asks' => $asks->inRandomOrder()->limit(3)->get()->map->toRecipient(),
             'balls' => Pond::query()->published()->ordered()->get()->map->toCard(),
         ]);

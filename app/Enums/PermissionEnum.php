@@ -42,11 +42,16 @@ enum PermissionEnum: string
     case PAYMENTS_REFUND = 'payments.refund';
     case PAYMENT_SETTINGS_VIEW = 'payment-settings.view';
     case PAYMENT_SETTINGS_EDIT = 'payment-settings.edit';
+    case WITHDRAWALS_INDEX = 'withdrawals.index';
+    case WITHDRAWALS_PROCESS = 'withdrawals.process';
+    case WALLETS_INDEX = 'wallets.index';
+    case WALLETS_ADJUST = 'wallets.adjust';
 
     // MEMBER: CHOOSING AND BUYING PONDS
     case MEMBER_PONDS_VIEW = 'member-ponds.view';
     case MEMBER_PONDS_PURCHASE = 'member-ponds.purchase';
     case MEMBER_PAYMENTS_VIEW = 'member-payments.view';
+    case MEMBER_WALLET_VIEW = 'member-wallet.view';
 
     // PERMISSIONS (developer-defined, read-only — listing & export only)
     case PERMISSIONS_INDEX = 'permissions.index';
@@ -101,11 +106,16 @@ enum PermissionEnum: string
             self::PAYMENTS_INDEX,
             self::PAYMENTS_REFUND,
             self::PAYMENT_SETTINGS_VIEW,
-            self::PAYMENT_SETTINGS_EDIT => 'Payments',
+            self::PAYMENT_SETTINGS_EDIT,
+            self::WITHDRAWALS_INDEX,
+            self::WITHDRAWALS_PROCESS,
+            self::WALLETS_INDEX,
+            self::WALLETS_ADJUST => 'Payments',
 
             self::MEMBER_PONDS_VIEW,
             self::MEMBER_PONDS_PURCHASE,
-            self::MEMBER_PAYMENTS_VIEW => 'Member',
+            self::MEMBER_PAYMENTS_VIEW,
+            self::MEMBER_WALLET_VIEW => 'Member',
 
             self::PERMISSIONS_INDEX,
             self::PERMISSIONS_EXPORT => 'Permissions',
@@ -128,7 +138,7 @@ enum PermissionEnum: string
      */
     public static function memberOnly(): array
     {
-        return [self::MEMBER_PONDS_VIEW, self::MEMBER_PONDS_PURCHASE, self::MEMBER_PAYMENTS_VIEW];
+        return [self::MEMBER_PONDS_VIEW, self::MEMBER_PONDS_PURCHASE, self::MEMBER_PAYMENTS_VIEW, self::MEMBER_WALLET_VIEW];
     }
 
     // -------------------------------------------------------------------------

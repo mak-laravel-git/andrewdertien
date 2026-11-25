@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PondController as AdminPondController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\WalletController as AdminWalletController;
+use App\Http\Controllers\Admin\WithdrawalController as AdminWithdrawalController;
 use App\Http\Controllers\BallOfferController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\DashboardController;
@@ -16,9 +18,11 @@ use App\Http\Controllers\Member\CheckoutController;
 use App\Http\Controllers\Member\PaymentController as MemberPaymentController;
 use App\Http\Controllers\Member\PondController as MemberPondController;
 use App\Http\Controllers\Member\SandboxCheckoutController;
+use App\Http\Controllers\Member\WalletController as MemberWalletController;
 use App\Http\Controllers\MemberDirectoryController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PondCatalogController;
 use App\Http\Controllers\PostAttachmentController;
 use App\Http\Controllers\SplashController;
@@ -60,6 +64,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware(['permission:'.PermissionEnum::MEMBER_PONDS_PURCHASE->value, 'throttle:20,1']);
         Route::get('payments', [MemberPaymentController::class, 'index'])->name('payments.index')
             ->middleware('permission:'.PermissionEnum::MEMBER_PAYMENTS_VIEW->value);
+
+        // The wallet: what balls tossed to the member have earned, and asking for it to be paid out.
+        Route::prefix('wallet')->name('wallet.')->controller(MemberWalletController::class)
+            ->middleware('permission:'.PermissionEnum::MEMBER_WALLET_VIEW->value)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::post('withdrawals', 'withdraw')->name('withdraw')->middleware('throttle:10,1');
+                Route::post('withdrawals/{withdrawal}/cancel', 'cancel')->name('withdrawals.cancel')->middleware('throttle:20,1');
+            });
     });
 
     // Where the payment provider sends the buyer back to.
@@ -69,6 +82,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('sandbox', [SandboxCheckoutController::class, 'show'])->name('sandbox.show');
         Route::post('sandbox', [SandboxCheckoutController::class, 'complete'])->name('sandbox.complete');
     });
+
+    // The bell: mark what is in it as read.
+    Route::post('notifications/read', [NotificationController::class, 'read'])->name('notifications.read');
 
     // ── Community: what members share, celebrate and comment on ───────────────
     Route::prefix('community')->name('community.')->controller(CommunityController::class)->group(function () {
@@ -172,11 +188,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->middleware('permission:'.PermissionEnum::PAYMENTS_REFUND->value);
         });
 
+        // Withdrawals: members ask for money in their wallet, and an admin pays it out by hand.
+        Route::controller(AdminWithdrawalController::class)->prefix('withdrawals')->name('withdrawals.')->group(function () {
+            Route::get('/', 'index')->name('index')
+                ->middleware('permission:'.PermissionEnum::WITHDRAWALS_INDEX->value);
+            Route::get('export', 'export')->name('export')
+                ->middleware('permission:'.PermissionEnum::WITHDRAWALS_INDEX->value);
+            Route::post('{withdrawal}/pay', 'pay')->name('pay')
+                ->middleware(['permission:'.PermissionEnum::WITHDRAWALS_PROCESS->value, 'throttle:60,1']);
+            Route::post('{withdrawal}/reject', 'reject')->name('reject')
+                ->middleware(['permission:'.PermissionEnum::WITHDRAWALS_PROCESS->value, 'throttle:60,1']);
+        });
+
+        // Wallets: every member's balance, with a ledger and a way to put a balance right by hand.
+        Route::controller(AdminWalletController::class)->prefix('wallets')->name('wallets.')->group(function () {
+            Route::get('/', 'index')->name('index')
+                ->middleware('permission:'.PermissionEnum::WALLETS_INDEX->value);
+            Route::get('{user}', 'show')->name('show')
+                ->middleware('permission:'.PermissionEnum::WALLETS_INDEX->value);
+            Route::post('{user}/adjust', 'adjust')->name('adjust')
+                ->middleware(['permission:'.PermissionEnum::WALLETS_ADJUST->value, 'throttle:30,1']);
+        });
+
         // Stripe connection: keys, on/off and a connection check.
         Route::controller(AdminPaymentSettingsController::class)->prefix('settings/stripe')->name('stripe.')->group(function () {
             Route::get('/', 'edit')->name('edit')
                 ->middleware('permission:'.PermissionEnum::PAYMENT_SETTINGS_VIEW->value);
             Route::put('/', 'update')->name('update')
+                ->middleware(['permission:'.PermissionEnum::PAYMENT_SETTINGS_EDIT->value, 'throttle:20,1']);
+            Route::put('fees', 'updateFees')->name('fees.update')
                 ->middleware(['permission:'.PermissionEnum::PAYMENT_SETTINGS_EDIT->value, 'throttle:20,1']);
             Route::post('test', 'test')->name('test')
                 ->middleware(['permission:'.PermissionEnum::PAYMENT_SETTINGS_EDIT->value, 'throttle:20,1']);

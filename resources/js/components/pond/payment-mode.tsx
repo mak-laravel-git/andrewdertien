@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { FlaskConical } from 'lucide-react';
+import type { FeeRules } from '@/components/pond/fees';
 
 /** What kind of payments the site is taking right now. */
 export type PaymentMode = 'sandbox' | 'test' | 'live' | 'unconfigured' | 'unavailable';
@@ -17,6 +18,13 @@ export function usePaymentMode(): { mode: PaymentMode; isTestMode: boolean } | n
     const { payments } = usePage().props as { payments?: { mode: PaymentMode; is_test_mode: boolean } | null };
 
     return payments ? { mode: payments.mode, isTestMode: payments.is_test_mode } : null;
+}
+
+/** The platform fee and toss limits an admin set, shared with every signed-in page. */
+export function useFeeRules(): FeeRules {
+    const { payments } = usePage().props as { payments?: { fees?: FeeRules } | null };
+
+    return payments?.fees ?? { percent: 10, minimum_fee_cents: 50, minimum_toss_cents: 100, processing_percent: 2.9, processing_fixed_cents: 30 };
 }
 
 /**

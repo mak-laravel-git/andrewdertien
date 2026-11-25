@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Payments\FeeSettings;
 use App\Support\Payments\PaymentGatewayManager;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -55,9 +56,22 @@ class HandleInertiaRequests extends Middleware
             'payments' => fn (): ?array => $user ? [
                 'mode' => app(PaymentGatewayManager::class)->mode(),
                 'is_test_mode' => app(PaymentGatewayManager::class)->isTestMode(),
+                // The platform fee and toss limits an admin set, so toss screens can explain them.
+                'fees' => app(FeeSettings::class)->forDisplay(),
             ] : null,
             // The little number on the Messages link.
             'unreadMessages' => fn (): int => $user?->unreadMessageCount() ?? 0,
+            // The bell: unread count and the latest few things that happened to the member.
+            'notifications' => fn (): ?array => $user ? [
+                'unread' => $user->unreadNotifications()->count(),
+                'items' => $user->notifications()->latest()->limit(6)->get()->map(fn ($notification): array => [
+                    'id' => $notification->id,
+                    'message' => (string) ($notification->data['message'] ?? ''),
+                    'url' => $notification->data['url'] ?? null,
+                    'read' => $notification->read_at !== null,
+                    'time' => $notification->created_at?->diffForHumans(),
+                ])->all(),
+            ] : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

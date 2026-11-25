@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\CreditWallet;
 use App\Models\PondPurchase;
 use App\Support\Payments\PondCheckout;
 use App\Support\Payments\StripeGateway;
 use App\Support\Payments\StripeSettings;
+use App\Support\Wallet\WalletReversal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Stripe's own record of what happened. This is what makes a purchase reliable
@@ -20,7 +23,7 @@ class StripeWebhookController extends Controller
      */
     private const SIGNATURE_TOLERANCE = 300;
 
-    public function __invoke(Request $request, PondCheckout $checkout, StripeSettings $settings): Response
+    public function __invoke(Request $request, PondCheckout $checkout, StripeSettings $settings, WalletReversal $reversal): Response
     {
         abort_unless($this->hasValidSignature($request, $settings), 400);
 
@@ -29,7 +32,9 @@ class StripeWebhookController extends Controller
         $type = $event['type'] ?? null;
 
         if ($type === 'charge.refunded') {
-            $this->chargeRefunded($object, $checkout);
+            $this->chargeRefunded($object, $checkout, $reversal);
+        } elseif (in_array($type, ['charge.dispute.created', 'charge.dispute.closed'], true)) {
+            $this->disputeChanged($type, $object, $checkout, $reversal);
         } elseif (is_string($type) && str_starts_with($type, 'checkout.session.') && $purchase = $this->findBySession($object)) {
             $this->sessionChanged($type, $object, $purchase, $checkout);
         }
@@ -63,20 +68,67 @@ class StripeWebhookController extends Controller
      *
      * @param  array<string, mixed>  $charge
      */
-    private function chargeRefunded(array $charge, PondCheckout $checkout): void
+    private function chargeRefunded(array $charge, PondCheckout $checkout, WalletReversal $reversal): void
     {
         if (($charge['refunded'] ?? false) !== true || empty($charge['payment_intent'])) {
             return;
         }
 
-        $purchase = PondPurchase::query()
-            ->where('gateway', StripeGateway::NAME)
-            ->where('gateway_payment_id', $charge['payment_intent'])
-            ->first();
+        $purchase = $this->findByPaymentIntent($charge['payment_intent']);
 
-        if ($purchase) {
-            $checkout->markRefunded($purchase);
+        if ($purchase?->isPaid()) {
+            // The buyer already has their money back, so the member's share has to come back too.
+            $reversal->undoQuietly($purchase);
+
+            // Stripe reports the amount in the currency the buyer paid in.
+            $checkout->markRefunded($purchase, isset($charge['amount_refunded']) ? $purchase->toPricedCents((int) $charge['amount_refunded']) : null);
         }
+    }
+
+    /**
+     * The buyer's bank opened or closed a dispute (chargeback). Money that is disputed is not sent
+     * to the member while the dispute is open. If it is lost the buyer has their money back, so the
+     * member's share is taken back and the toss is treated as refunded. Either way it is logged for an admin.
+     *
+     * @param  array<string, mixed>  $dispute
+     */
+    private function disputeChanged(string $type, array $dispute, PondCheckout $checkout, WalletReversal $reversal): void
+    {
+        $purchase = empty($dispute['payment_intent']) ? null : $this->findByPaymentIntent($dispute['payment_intent']);
+
+        if (! $purchase) {
+            return;
+        }
+
+        $status = (string) ($dispute['status'] ?? 'needs_response');
+
+        $purchase->update([
+            'dispute_id' => $dispute['id'] ?? $purchase->dispute_id,
+            'dispute_status' => $status,
+            'disputed_at' => $purchase->disputed_at ?? now(),
+        ]);
+
+        if ($type === 'charge.dispute.created') {
+            Log::critical('A buyer disputed a payment.', ['purchase' => $purchase->reference, 'dispute' => $dispute['id'] ?? null, 'reason' => $dispute['reason'] ?? null]);
+
+            return;
+        }
+
+        if ($status === 'lost' && $purchase->isPaid()) {
+            $reversal->undoQuietly($purchase);
+            $checkout->markRefunded($purchase, isset($dispute['amount']) ? $purchase->toPricedCents((int) $dispute['amount']) : null);
+        } elseif ($status === 'won' && $purchase->recipient_id) {
+            // Nothing is owed back, so a share that was held back for the dispute can now be credited.
+            CreditWallet::dispatch($purchase->id);
+        }
+    }
+
+    private function findByPaymentIntent(string $paymentIntent): ?PondPurchase
+    {
+        return PondPurchase::query()
+            ->where('gateway', StripeGateway::NAME)
+            ->where('gateway_payment_id', $paymentIntent)
+            ->first();
     }
 
     /**

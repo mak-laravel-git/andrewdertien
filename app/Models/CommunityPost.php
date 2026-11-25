@@ -111,6 +111,7 @@ class CommunityPost extends Model
             'created_at' => $this->created_at?->toIso8601String(),
             'time' => $this->created_at?->diffForHumans(),
             'author' => $this->author->toMemberChip(),
+            'author_can_receive' => $this->author->canBeTossedABall(),
             'reactions' => [
                 'total' => array_sum($counts),
                 'counts' => (object) $counts,

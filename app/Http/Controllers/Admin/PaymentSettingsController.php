@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Payment\UpdateFeeSettingsRequest;
 use App\Http\Requests\Payment\UpdateStripeSettingsRequest;
 use App\Models\PaymentSetting;
+use App\Support\Payments\FeeSettings;
 use App\Support\Payments\PaymentGatewayException;
 use App\Support\Payments\PaymentGatewayManager;
 use App\Support\Payments\StripeGateway;
@@ -33,9 +35,11 @@ class PaymentSettingsController extends Controller
         'checkout.session.async_payment_failed',
         'checkout.session.expired',
         'charge.refunded',
+        'charge.dispute.created',
+        'charge.dispute.closed',
     ];
 
-    public function edit(Request $request, StripeSettings $stripe, PaymentGatewayManager $gateways): Response
+    public function edit(Request $request, StripeSettings $stripe, PaymentGatewayManager $gateways, FeeSettings $fees): Response
     {
         return Inertia::render('pond/admin/payment-settings', [
             'stripe' => [
@@ -55,6 +59,17 @@ class PaymentSettingsController extends Controller
                 'mode' => $gateways->mode(),
                 'is_test_mode' => $gateways->isTestMode(),
                 'is_ready' => $gateways->isReady(),
+            ],
+            'fees' => [
+                'platform_fee_percent' => $fees->percent(),
+                'minimum_fee' => $fees->minimumFeeCents() / 100,
+                'minimum_toss' => $fees->minimumTossCents() / 100,
+                'minimum_withdrawal' => $fees->minimumWithdrawalCents() / 100,
+                'wallet_hold_days' => $fees->walletHoldDays(),
+                'adaptive_pricing' => $fees->adaptivePricing(),
+                'processing_percent' => (float) config('payments.processing_estimate.percent'),
+                'processing_fixed_cents' => (int) config('payments.processing_estimate.fixed_cents'),
+                'maximum_percent' => FeeSettings::MAXIMUM_PERCENT,
             ],
             'webhook' => [
                 'url' => route('webhooks.stripe'),
@@ -93,6 +108,27 @@ class PaymentSettingsController extends Controller
         $stripe->flush();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => $this->savedMessage($stripe)]);
+
+        return to_route('admin.stripe.edit');
+    }
+
+    /**
+     * Save the platform fee and toss limits. They apply to tosses made from now on.
+     */
+    public function updateFees(UpdateFeeSettingsRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+
+        PaymentSetting::current()->update([
+            'platform_fee_percent' => $data['platform_fee_percent'],
+            'minimum_fee_cents' => (int) round($data['minimum_fee'] * 100),
+            'minimum_toss_cents' => (int) round($data['minimum_toss'] * 100),
+            'minimum_withdrawal_cents' => (int) round($data['minimum_withdrawal'] * 100),
+            'wallet_hold_days' => (int) $data['wallet_hold_days'],
+            'adaptive_pricing' => (bool) $data['adaptive_pricing'],
+        ]);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Fees and limits saved. They apply to new tosses.']);
 
         return to_route('admin.stripe.edit');
     }

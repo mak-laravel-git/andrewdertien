@@ -1,5 +1,11 @@
 import { Link } from '@inertiajs/react';
-import { CheckCircle2, CircleAlert, CircleSlash, Clock3, RotateCcw } from 'lucide-react';
+import {
+    CheckCircle2,
+    CircleAlert,
+    CircleSlash,
+    Clock3,
+    RotateCcw,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
@@ -17,7 +23,12 @@ export type PondCard = {
     image_url: string;
 };
 
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded';
+export type PaymentStatus =
+    | 'pending'
+    | 'paid'
+    | 'failed'
+    | 'cancelled'
+    | 'refunded';
 
 export type PaymentRow = {
     reference: string;
@@ -30,7 +41,20 @@ export type PaymentRow = {
     pond_name: string;
     pond_slug: string | null;
     amount_cents: number;
+    /** The platform fee taken from a toss for a member, in cents. */
+    fee_cents: number;
+    processing_fee_cents: number | null;
+    /** What the member receives, once it has been worked out. */
+    net_cents: number | null;
+    payout_status: 'none' | 'pending' | 'credited' | 'failed' | 'reversed';
+    /** What the buyer gets back on a refund: everything except the platform fee. */
+    refund_cents: number;
+    refunded_cents: number | null;
+    dispute_status: string | null;
     currency: string;
+    /** What the buyer actually paid, when it was in a currency other than the ball's. */
+    presentment_currency: string | null;
+    presentment_amount_cents: number | null;
     status: PaymentStatus;
     gateway: string;
     is_test: boolean;
@@ -66,11 +90,17 @@ const statusIcons: Record<PaymentStatus, LucideIcon> = {
 };
 
 export function formatMoney(cents: number, currency: string): string {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.toUpperCase(), currencyDisplay: 'narrowSymbol' }).format(cents / 100);
+    return new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency: currency.toUpperCase(),
+        currencyDisplay: 'narrowSymbol',
+    }).format(cents / 100);
 }
 
 export function formatDate(iso: string | null): string {
-    return iso ? new Date(iso).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '—';
+    return iso
+        ? new Date(iso).toLocaleDateString(undefined, { dateStyle: 'medium' })
+        : '—';
 }
 
 export function StatusBadge({ status }: { status: PaymentStatus }) {
@@ -84,7 +114,19 @@ export function StatusBadge({ status }: { status: PaymentStatus }) {
     );
 }
 
-export function StatTile({ icon: Icon, label, value, hint, tone = 'purple' }: { icon: LucideIcon; label: string; value: string; hint?: string; tone?: 'purple' | 'pink' | 'green' }) {
+export function StatTile({
+    icon: Icon,
+    label,
+    value,
+    hint,
+    tone = 'purple',
+}: {
+    icon: LucideIcon;
+    label: string;
+    value: string;
+    hint?: string;
+    tone?: 'purple' | 'pink' | 'green';
+}) {
     return (
         <div className="pond-mini-stat pd-stat">
             <div className={`pond-mini-stat-icon stat-${tone}`}>
@@ -99,8 +141,14 @@ export function StatTile({ icon: Icon, label, value, hint, tone = 'purple' }: { 
     );
 }
 
-export function PondArt({ pond }: { pond: Pick<PondCard, 'image_url' | 'name'> }) {
-    const isBall = pond.image_url.startsWith('/quantum/images/') || pond.image_url.startsWith('/askupon/balls/');
+export function PondArt({
+    pond,
+}: {
+    pond: Pick<PondCard, 'image_url' | 'name'>;
+}) {
+    const isBall =
+        pond.image_url.startsWith('/quantum/images/') ||
+        pond.image_url.startsWith('/askupon/balls/');
 
     return (
         <div className={`pd-pond-art ${isBall ? 'is-ball' : 'is-photo'}`}>
@@ -109,18 +157,39 @@ export function PondArt({ pond }: { pond: Pick<PondCard, 'image_url' | 'name'> }
     );
 }
 
-export function Pagination({ page, label }: { page: Pick<PaginatedRows<unknown>, 'current_page' | 'last_page' | 'prev_page_url' | 'next_page_url'>; label: string }) {
+export function Pagination({
+    page,
+    label,
+}: {
+    page: Pick<
+        PaginatedRows<unknown>,
+        'current_page' | 'last_page' | 'prev_page_url' | 'next_page_url'
+    >;
+    label: string;
+}) {
     if (page.last_page <= 1) {
         return null;
     }
 
     return (
         <nav className="pond-pagination" aria-label={label}>
-            {page.prev_page_url ? <Link href={page.prev_page_url} preserveScroll>← Previous</Link> : <span />}
+            {page.prev_page_url ? (
+                <Link href={page.prev_page_url} preserveScroll>
+                    ← Previous
+                </Link>
+            ) : (
+                <span />
+            )}
             <span>
                 Page {page.current_page} of {page.last_page}
             </span>
-            {page.next_page_url ? <Link href={page.next_page_url} preserveScroll>Next →</Link> : <span />}
+            {page.next_page_url ? (
+                <Link href={page.next_page_url} preserveScroll>
+                    Next →
+                </Link>
+            ) : (
+                <span />
+            )}
         </nav>
     );
 }
@@ -129,7 +198,36 @@ export function Pagination({ page, label }: { page: Pick<PaginatedRows<unknown>,
  * Payment history as a table. `showBuyer` adds who paid, for the admin's views;
  * `actions` adds a trailing cell per row.
  */
-export function PaymentsTable({ rows, showBuyer = false, buyerHref, actions }: { rows: PaymentRow[]; showBuyer?: boolean; buyerHref?: (row: PaymentRow) => string | null; actions?: (row: PaymentRow) => ReactNode }) {
+/** A few words on where the member's share of a toss has got to. */
+export function payoutText(row: PaymentRow): string {
+    switch (row.payout_status) {
+        case 'credited':
+            return `Wallet +${formatMoney(row.net_cents ?? 0, row.currency)}`;
+        case 'pending':
+            return 'Waiting to reach wallet';
+        case 'failed':
+            return 'Wallet credit failed';
+        case 'reversed':
+            return 'Taken back from wallet';
+        default:
+            return 'No wallet credit';
+    }
+}
+
+export function PaymentsTable({
+    rows,
+    showBuyer = false,
+    showPayout = false,
+    buyerHref,
+    actions,
+}: {
+    rows: PaymentRow[];
+    showBuyer?: boolean;
+    /** Show where the member's share of each toss has got to (for admins). */
+    showPayout?: boolean;
+    buyerHref?: (row: PaymentRow) => string | null;
+    actions?: (row: PaymentRow) => ReactNode;
+}) {
     return (
         <div className="pd-table-wrap">
             <table className="pd-table">
@@ -162,26 +260,82 @@ export function PaymentsTable({ rows, showBuyer = false, buyerHref, actions }: {
                             <tr key={row.reference}>
                                 <td>
                                     <strong>{row.pond_name}</strong>
-                                    {row.recipient_name && <small>For {row.recipient_name}</small>}
-                                    {row.is_test && <span className="pond-mode-badge pond-mode-small" title="Made in test mode: no real money moved">Test</span>}
-                                    <small className="pd-show-mobile">{formatDate(row.paid_at ?? row.created_at)}</small>
-                                    {row.failure_message && <small>{row.failure_message}</small>}
+                                    {row.recipient_name && (
+                                        <small>For {row.recipient_name}</small>
+                                    )}
+                                    {row.is_test && (
+                                        <span
+                                            className="pond-mode-badge pond-mode-small"
+                                            title="Made in test mode: no real money moved"
+                                        >
+                                            Test
+                                        </span>
+                                    )}
+                                    <small className="pd-show-mobile">
+                                        {formatDate(
+                                            row.paid_at ?? row.created_at,
+                                        )}
+                                    </small>
+                                    {row.failure_message && (
+                                        <small>{row.failure_message}</small>
+                                    )}
                                 </td>
                                 {showBuyer && (
                                     <td>
-                                        {href ? <Link href={href} className="pd-link"><strong>{row.buyer_name}</strong></Link> : <strong>{row.buyer_name}</strong>}
+                                        {href ? (
+                                            <Link
+                                                href={href}
+                                                className="pd-link"
+                                            >
+                                                <strong>
+                                                    {row.buyer_name}
+                                                </strong>
+                                            </Link>
+                                        ) : (
+                                            <strong>{row.buyer_name}</strong>
+                                        )}
                                         <small>{row.buyer_email}</small>
                                     </td>
                                 )}
-                                <td className="pd-nowrap pd-hide-mobile">{formatDate(row.paid_at ?? row.created_at)}</td>
-                                <td className="pd-mono pd-hide-mobile">{row.reference}</td>
+                                <td className="pd-nowrap pd-hide-mobile">
+                                    {formatDate(row.paid_at ?? row.created_at)}
+                                </td>
+                                <td className="pd-mono pd-hide-mobile">
+                                    {row.reference}
+                                </td>
                                 <td>
                                     <StatusBadge status={row.status} />
+                                    {showPayout &&
+                                        row.recipient_id !== null && (
+                                            <small
+                                                className={`po-status is-${row.payout_status}`}
+                                            >
+                                                {payoutText(row)}
+                                            </small>
+                                        )}
+                                    {showPayout && row.dispute_status && (
+                                        <small className="po-status is-failed">
+                                            Dispute:{' '}
+                                            {row.dispute_status.replace(
+                                                /_/g,
+                                                ' ',
+                                            )}
+                                        </small>
+                                    )}
                                 </td>
                                 <td className="pd-num">
-                                    <strong>{formatMoney(row.amount_cents, row.currency)}</strong>
+                                    <strong>
+                                        {formatMoney(
+                                            row.amount_cents,
+                                            row.currency,
+                                        )}
+                                    </strong>
                                 </td>
-                                {actions && <td className="pd-actions">{actions(row)}</td>}
+                                {actions && (
+                                    <td className="pd-actions">
+                                        {actions(row)}
+                                    </td>
+                                )}
                             </tr>
                         );
                     })}

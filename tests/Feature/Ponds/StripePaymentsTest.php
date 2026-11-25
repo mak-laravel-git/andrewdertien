@@ -356,7 +356,7 @@ test('an admin can download the filtered payments as a spreadsheet', function ()
 
     expect($csv)->toContain('Reference,Date')
         ->toContain($this->member->email)
-        ->toContain('25.00,USD,paid,Test')
+        ->toContain('25.00,USD,,,,,,none,,,paid,Test')
         ->not->toContain('evil.test');
 
     $all = $this->actingAs($admin)->get(route('admin.payments.export'))->streamedContent();

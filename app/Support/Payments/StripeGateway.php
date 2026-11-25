@@ -37,6 +37,8 @@ class StripeGateway implements PaymentGateway
                     'success_url' => $returnUrl,
                     'cancel_url' => $cancelUrl,
                     'client_reference_id' => $purchase->reference,
+                    // Prices are in dollars; a buyer abroad may see and pay in their own currency.
+                    'adaptive_pricing' => ['enabled' => app(FeeSettings::class)->adaptivePricing() ? 'true' : 'false'],
                     'customer_email' => $purchase->buyer_email,
                     'line_items' => [[
                         'quantity' => 1,
@@ -77,12 +79,49 @@ class StripeGateway implements PaymentGateway
         );
     }
 
-    public function refund(PondPurchase $purchase): void
+    public function refund(PondPurchase $purchase, int $amountCents): void
     {
+        $fields = ['payment_intent' => $purchase->gateway_payment_id];
+
+        // Leaving the amount out refunds everything; a smaller amount keeps the platform fee. The amount
+        // is in the currency the buyer paid in, so a buyer who paid in euros is refunded the same share in euros.
+        if ($amountCents < $purchase->amount_cents) {
+            $fields['amount'] = $purchase->toBuyerCents($amountCents);
+        }
+
         $this->send(
             fn (PendingRequest $request): Response => $request
                 ->withHeaders(['Idempotency-Key' => "refund-{$purchase->reference}"])
-                ->post(self::API.'/refunds', ['payment_intent' => $purchase->gateway_payment_id]),
+                ->post(self::API.'/refunds', $fields),
+        );
+    }
+
+    /**
+     * The payment's real figures from Stripe: what it received and the processing fee it kept.
+     */
+    public function fetchChargeSettlement(PondPurchase $purchase): ChargeSettlement
+    {
+        $intent = $this->send(
+            fn (PendingRequest $request): Response => $request->get(
+                self::API."/payment_intents/{$purchase->gateway_payment_id}",
+                ['expand' => ['latest_charge.balance_transaction']],
+            ),
+        );
+
+        $charge = $intent['latest_charge'] ?? null;
+        $transaction = is_array($charge) ? ($charge['balance_transaction'] ?? null) : null;
+
+        if (! is_array($charge) || ! is_array($transaction)) {
+            throw new PaymentGatewayException('Stripe has not finished settling this payment yet.');
+        }
+
+        return new ChargeSettlement(
+            chargeId: $charge['id'],
+            grossCents: (int) $transaction['amount'],
+            processingFeeCents: (int) $transaction['fee'],
+            currency: strtolower((string) $transaction['currency']),
+            buyerPaidCents: isset($charge['amount']) ? (int) $charge['amount'] : null,
+            buyerCurrency: isset($charge['currency']) ? strtolower((string) $charge['currency']) : null,
         );
     }
 
