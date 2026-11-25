@@ -69,6 +69,16 @@ export default function Member({ member, isOwnProfile, canSendSparkBall, recipie
                                     <MapPin size={16} /> {member.location}
                                 </p>
                             )}
+                            {!isOwnProfile && (
+                                <div className="pp-quick-actions">
+                                    <Link href={messages.show.url(member.username ?? '')} className="pond-btn pond-btn-primary" data-test="profile-message">
+                                        <MessageCircle size={17} /> Message {firstName}
+                                    </Link>
+                                    <button type="button" className="pond-btn pond-btn-outline-dark" onClick={() => setTossCategory('dreams')}>
+                                        <Gift size={17} /> Toss a Ball
+                                    </button>
+                                </div>
+                            )}
                             <span className="pp-wave" aria-hidden="true" />
 
                             <h3>{possessive} Interests</h3>

@@ -2,6 +2,7 @@ import { Head, Link, router, useForm, usePoll } from '@inertiajs/react';
 import { ArrowLeft, MessageCircle, Plus, Search, Send } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import { MemberAvatar, MemberName } from '@/components/pond/community-post';
 import type { MemberChip } from '@/components/pond/community-post';
 import type { Recipient } from '@/components/pond/toss-ball';
 import {
@@ -219,13 +220,9 @@ export default function Messages({ conversations, active, members }: Props) {
                                     >
                                         <ArrowLeft size={19} />
                                     </Link>
-                                    <Avatar
-                                        name={active.name}
-                                        hue={hueFor(active.id)}
-                                        src={active.avatar_url}
-                                    />
+                                    <MemberAvatar member={active} />
                                     <div>
-                                        <strong>{active.name}</strong>
+                                        <MemberName member={active} />
                                         {active.username && (
                                             <small>
                                                 <Link

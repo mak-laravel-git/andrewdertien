@@ -23,7 +23,7 @@ test('the community shows real posts newest first, with the author and counts', 
     $older = CommunityPost::factory()->for($this->friend, 'author')->create(['body' => 'An older post', 'created_at' => now()->subDay()]);
     $newer = CommunityPost::factory()->for($this->friend, 'author')->create(['body' => 'A newer post']);
     CommunityComment::factory()->for($newer, 'post')->for($this->member, 'author')->create(['body' => 'Lovely!']);
-    $newer->celebrations()->attach($this->member);
+    $newer->reactions()->attach($this->member, ['reaction' => 'love']);
 
     $this->actingAs($this->member)
         ->get(route('community.index'))
@@ -32,13 +32,15 @@ test('the community shows real posts newest first, with the author and counts', 
             ->has('posts.data', 2)
             ->where('posts.data.0.id', $newer->id)
             ->where('posts.data.0.author.name', 'Jamie Pond')
-            ->where('posts.data.0.celebrations', 1)
-            ->where('posts.data.0.celebrated', true)
+            ->where('posts.data.0.reactions.total', 1)
+            ->where('posts.data.0.reactions.mine', 'love')
+            ->where('posts.data.0.reactions.counts.love', 1)
             ->where('posts.data.0.comments.0.body', 'Lovely!')
             ->where('posts.data.0.comments.0.author.name', 'Sam Member')
             ->where('posts.data.0.can_delete', false)
             ->where('posts.data.1.id', $older->id)
-            ->where('posts.data.1.celebrated', false)
+            ->where('posts.data.1.reactions.total', 0)
+            ->where('posts.data.1.reactions.mine', null)
             ->has('people', 1)
         );
 });
@@ -79,14 +81,64 @@ test('a post needs a real category and some words', function (array $data) {
     'too long' => [['category' => 'dreams', 'body' => str_repeat('a', 501)]],
 ]);
 
-test('celebrating a post toggles on and off', function () {
+test('a member can react to a post, change the reaction and take it back', function () {
     $post = CommunityPost::factory()->for($this->friend, 'author')->create();
 
-    $this->actingAs($this->member)->post(route('community.posts.celebrate', $post))->assertRedirect();
-    expect($post->celebrations()->count())->toBe(1);
+    $this->actingAs($this->member)->post(route('community.posts.react', $post), ['reaction' => 'like'])->assertRedirect();
+    expect($post->reactions()->count())->toBe(1)
+        ->and($post->reactions()->first()->pivot->reaction)->toBe('like');
 
-    $this->actingAs($this->member)->post(route('community.posts.celebrate', $post))->assertRedirect();
-    expect($post->celebrations()->count())->toBe(0);
+    $this->actingAs($this->member)->post(route('community.posts.react', $post), ['reaction' => 'wow'])->assertRedirect();
+    expect($post->reactions()->count())->toBe(1)
+        ->and($post->reactions()->first()->pivot->reaction)->toBe('wow');
+
+    $this->actingAs($this->member)->post(route('community.posts.react', $post), ['reaction' => 'wow'])->assertRedirect();
+    expect($post->reactions()->count())->toBe(0);
+});
+
+test('reactions from several members are counted by kind', function () {
+    $post = CommunityPost::factory()->for($this->friend, 'author')->create();
+    $post->reactions()->attach($this->friend, ['reaction' => 'like']);
+    $post->reactions()->attach($this->member, ['reaction' => 'like']);
+    $post->reactions()->attach(User::factory()->create(), ['reaction' => 'support']);
+
+    $this->actingAs($this->member)
+        ->get(route('community.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('posts.data.0.reactions.total', 3)
+            ->where('posts.data.0.reactions.counts.like', 2)
+            ->where('posts.data.0.reactions.counts.support', 1)
+            ->where('posts.data.0.reactions.mine', 'like')
+        );
+});
+
+test('only the known reactions are accepted', function () {
+    $post = CommunityPost::factory()->for($this->friend, 'author')->create();
+
+    $this->actingAs($this->member)->post(route('community.posts.react', $post), ['reaction' => 'angry'])->assertSessionHasErrors('reaction');
+    $this->actingAs($this->member)->post(route('community.posts.react', $post), [])->assertSessionHasErrors('reaction');
+
+    expect($post->reactions()->count())->toBe(0);
+});
+
+test('a post has its own page that a shared link can open', function () {
+    $post = CommunityPost::factory()->for($this->friend, 'author')->create(['body' => 'Look at this dream']);
+    CommunityComment::factory()->for($post, 'post')->for($this->member, 'author')->create(['body' => 'Nice!']);
+
+    $this->actingAs($this->member)
+        ->get(route('community.posts.show', $post))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('pond/community-post')
+            ->where('post.id', $post->id)
+            ->where('post.body', 'Look at this dream')
+            ->where('post.author.username', 'jamie')
+            ->has('post.comments', 1)
+        );
+
+    $this->actingAs($this->member)->get(route('community.posts.show', 999999))->assertNotFound();
+
+    auth()->logout();
+    $this->get(route('community.posts.show', $post))->assertRedirect(route('login'));
 });
 
 test('a member can comment on a post, but not with an empty comment', function () {
@@ -120,13 +172,13 @@ test('only the author or an admin can remove a post', function () {
     expect(CommunityPost::count())->toBe(0);
 });
 
-test('removing a post removes its comments and celebrations', function () {
+test('removing a post removes its comments and reactions', function () {
     $post = CommunityPost::factory()->for($this->friend, 'author')->create();
     CommunityComment::factory()->for($post, 'post')->create();
-    $post->celebrations()->attach($this->member);
+    $post->reactions()->attach($this->member, ['reaction' => 'like']);
 
     $this->actingAs($this->friend)->delete(route('community.posts.destroy', $post));
 
     expect(CommunityComment::count())->toBe(0)
-        ->and(DB::table('community_post_celebrations')->count())->toBe(0);
+        ->and(DB::table('community_post_reactions')->count())->toBe(0);
 });

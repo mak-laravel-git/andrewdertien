@@ -1,11 +1,20 @@
 import { Link, router, useForm, usePage } from '@inertiajs/react';
-import { Heart, MessageCircle, Send, Sparkles, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import {
+    MessageCircle,
+    Send,
+    Share2,
+    Sparkles,
+    ThumbsUp,
+    Trash2,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import { toast } from 'sonner';
 import { categories } from '@/components/pond/data';
 import { Avatar, CategoryPill, hueFor } from '@/components/pond/ui';
 import posts from '@/routes/community/posts';
 import { show as showMember } from '@/routes/members';
+import messages from '@/routes/messages';
 
 export type MemberChip = {
     id: number;
@@ -25,14 +34,26 @@ export type FeedPost = {
     body: string;
     time: string | null;
     author: MemberChip;
-    celebrations: number;
-    celebrated: boolean;
+    reactions: {
+        total: number;
+        counts: Record<string, number>;
+        mine: string | null;
+    };
     comments: FeedComment[];
     can_delete: boolean;
 };
 
+/** The reactions a member can leave. The first one is what a plain tap on Like gives. */
+export const reactionOptions = [
+    { value: 'like', label: 'Like', emoji: '👍' },
+    { value: 'love', label: 'Love', emoji: '❤️' },
+    { value: 'celebrate', label: 'Celebrate', emoji: '🎉' },
+    { value: 'support', label: 'Support', emoji: '🤗' },
+    { value: 'wow', label: 'Wow', emoji: '😮' },
+] as const;
+
 /** Where a member's name should lead: their profile, when they have chosen a username. */
-function MemberName({ member }: { member: MemberChip }) {
+export function MemberName({ member }: { member: MemberChip }) {
     return member.username ? (
         <Link href={showMember(member.username)} className="cm-name">
             {member.name}
@@ -42,20 +63,106 @@ function MemberName({ member }: { member: MemberChip }) {
     );
 }
 
+/** A member's picture, which opens their profile (where they can be messaged) when they have a username. */
+export function MemberAvatar({
+    member,
+    size,
+}: {
+    member: MemberChip;
+    size?: string;
+}) {
+    const avatar = (
+        <Avatar
+            name={member.name}
+            hue={hueFor(member.id)}
+            size={size}
+            src={member.avatar_url}
+        />
+    );
+
+    return member.username ? (
+        <Link
+            href={showMember(member.username)}
+            className="cm-avatar-link"
+            aria-label={`View ${member.name}'s profile`}
+        >
+            {avatar}
+        </Link>
+    ) : (
+        avatar
+    );
+}
+
 export default function CommunityPostCard({ post }: { post: FeedPost }) {
     const me =
         (usePage().props as { auth?: { user?: { id: number } | null } }).auth
             ?.user ?? null;
     const [showComments, setShowComments] = useState(false);
     const [confirmingRemove, setConfirmingRemove] = useState(false);
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const comment = useForm({ body: '' });
     const category = categories.find((option) => option.key === post.category);
-    const canToss = post.author.username && post.author.id !== me?.id;
+    const canReachAuthor = post.author.username && post.author.id !== me?.id;
+    const mine = reactionOptions.find(
+        (option) => option.value === post.reactions.mine,
+    );
+    const topReactions = reactionOptions
+        .filter((option) => (post.reactions.counts[option.value] ?? 0) > 0)
+        .sort(
+            (a, b) =>
+                (post.reactions.counts[b.value] ?? 0) -
+                (post.reactions.counts[a.value] ?? 0),
+        )
+        .slice(0, 3);
 
-    const celebrate = () =>
-        router.post(posts.celebrate.url(post.id), {}, { preserveScroll: true });
+    // On a phone there is no hover, so the picker opens on a long press and closes on the next tap elsewhere.
+    useEffect(() => {
+        if (!pickerOpen) {
+            return;
+        }
+
+        const close = () => setPickerOpen(false);
+        document.addEventListener('pointerdown', close);
+
+        return () => document.removeEventListener('pointerdown', close);
+    }, [pickerOpen]);
+
+    const react = (reaction: string) => {
+        setPickerOpen(false);
+        router.post(
+            posts.react.url(post.id),
+            { reaction },
+            { preserveScroll: true },
+        );
+    };
     const remove = () =>
         router.delete(posts.destroy.url(post.id), { preserveScroll: true });
+    const share = () => {
+        const url = `${window.location.origin}${posts.show.url(post.id)}`;
+        const touchDevice = window.matchMedia('(pointer: coarse)').matches;
+
+        if (touchDevice && navigator.share) {
+            navigator
+                .share({
+                    title: 'Ask Upon A Pond',
+                    text: post.body.slice(0, 120),
+                    url,
+                })
+                .catch(() => undefined);
+
+            return;
+        }
+
+        navigator.clipboard
+            ?.writeText(url)
+            .then(() =>
+                toast.success(
+                    'Link copied. Paste it anywhere to share this post.',
+                ),
+            )
+            .catch(() => toast.info(url));
+    };
     const submitComment = (event: FormEvent) => {
         event.preventDefault();
         comment.post(posts.comment.url(post.id), {
@@ -67,11 +174,7 @@ export default function CommunityPostCard({ post }: { post: FeedPost }) {
     return (
         <article className="pond-feed-card" data-test="community-post">
             <div className="pond-feed-head">
-                <Avatar
-                    name={post.author.name}
-                    hue={hueFor(post.author.id)}
-                    src={post.author.avatar_url}
-                />
+                <MemberAvatar member={post.author} />
                 <div className="pond-feed-meta">
                     <div>
                         <MemberName member={post.author} />{' '}
@@ -80,7 +183,14 @@ export default function CommunityPostCard({ post }: { post: FeedPost }) {
                             {category ? `in ${category.title}` : 'something'}
                         </span>
                     </div>
-                    <small>{post.time}</small>
+                    <small>
+                        <Link
+                            href={posts.show.url(post.id)}
+                            className="cm-time-link"
+                        >
+                            {post.time}
+                        </Link>
+                    </small>
                 </div>
                 {post.can_delete &&
                     (confirmingRemove ? (
@@ -117,9 +227,27 @@ export default function CommunityPostCard({ post }: { post: FeedPost }) {
             </div>
 
             <div className="pond-feed-stats">
-                <span>
-                    💜 {post.celebrations}{' '}
-                    {post.celebrations === 1 ? 'celebration' : 'celebrations'}
+                <span
+                    className="cm-reaction-summary"
+                    data-test="reaction-summary"
+                >
+                    {post.reactions.total > 0 ? (
+                        <>
+                            <span className="cm-reaction-emojis">
+                                {topReactions.map((option) => (
+                                    <span
+                                        key={option.value}
+                                        title={`${option.label}: ${post.reactions.counts[option.value]}`}
+                                    >
+                                        {option.emoji}
+                                    </span>
+                                ))}
+                            </span>{' '}
+                            {post.reactions.total}
+                        </>
+                    ) : (
+                        'Be the first to react'
+                    )}
                 </span>
                 <span>
                     {post.comments.length}{' '}
@@ -127,19 +255,62 @@ export default function CommunityPostCard({ post }: { post: FeedPost }) {
                 </span>
             </div>
 
-            <div className="pond-post-actions">
-                <button
-                    type="button"
-                    className={post.celebrated ? 'liked' : ''}
-                    onClick={celebrate}
-                    aria-pressed={post.celebrated}
+            <div className="pond-post-actions cm-actions">
+                <div
+                    className={`cm-react ${pickerOpen ? 'is-open' : ''}`}
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onTouchStart={() => {
+                        holdTimer.current = setTimeout(
+                            () => setPickerOpen(true),
+                            450,
+                        );
+                    }}
+                    onTouchEnd={() =>
+                        holdTimer.current && clearTimeout(holdTimer.current)
+                    }
+                    onTouchMove={() =>
+                        holdTimer.current && clearTimeout(holdTimer.current)
+                    }
+                    onContextMenu={(event) => event.preventDefault()}
                 >
-                    <Heart
-                        size={17}
-                        fill={post.celebrated ? 'currentColor' : 'none'}
-                    />{' '}
-                    Celebrate
-                </button>
+                    <div
+                        className="cm-picker"
+                        role="group"
+                        aria-label="Choose a reaction"
+                    >
+                        {reactionOptions.map((option) => (
+                            <button
+                                key={option.value}
+                                type="button"
+                                title={option.label}
+                                aria-label={option.label}
+                                className={
+                                    post.reactions.mine === option.value
+                                        ? 'is-mine'
+                                        : ''
+                                }
+                                onClick={() => react(option.value)}
+                                data-test={`react-${option.value}`}
+                            >
+                                {option.emoji}
+                            </button>
+                        ))}
+                    </div>
+                    <button
+                        type="button"
+                        className={mine ? 'liked' : ''}
+                        onClick={() => react(mine?.value ?? 'like')}
+                        aria-pressed={Boolean(mine)}
+                        data-test="react-button"
+                    >
+                        {mine ? (
+                            <span className="cm-mine-emoji">{mine.emoji}</span>
+                        ) : (
+                            <ThumbsUp size={17} />
+                        )}{' '}
+                        {mine?.label ?? 'Like'}
+                    </button>
+                </div>
                 <button
                     type="button"
                     onClick={() => setShowComments((open) => !open)}
@@ -147,7 +318,19 @@ export default function CommunityPostCard({ post }: { post: FeedPost }) {
                 >
                     <MessageCircle size={17} /> Comment
                 </button>
-                {canToss && (
+                <button type="button" onClick={share} data-test="share-post">
+                    <Share2 size={17} /> Share
+                </button>
+                {canReachAuthor && (
+                    <Link
+                        href={messages.show.url(post.author.username!)}
+                        className="cm-give"
+                        data-test="message-author"
+                    >
+                        <Send size={17} /> Message
+                    </Link>
+                )}
+                {canReachAuthor && (
                     <Link
                         href={showMember(
                             { username: post.author.username! },
@@ -169,14 +352,12 @@ export default function CommunityPostCard({ post }: { post: FeedPost }) {
                     )}
                     {post.comments.map((item) => (
                         <div className="pond-comment" key={item.id}>
-                            <Avatar
-                                name={item.author.name}
-                                hue={hueFor(item.author.id)}
+                            <MemberAvatar
+                                member={item.author}
                                 size="avatar-small"
-                                src={item.author.avatar_url}
                             />
                             <span>
-                                <strong>{item.author.name}</strong> {item.body}
+                                <MemberName member={item.author} /> {item.body}
                                 <small className="cm-comment-time">
                                     {item.time}
                                 </small>

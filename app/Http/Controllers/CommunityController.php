@@ -34,15 +34,15 @@ class CommunityController extends Controller
 
         $posts = CommunityPost::query()
             ->with(['author', 'comments.author'])
-            ->withCount('celebrations')
-            ->withExists(['celebrations as celebrated_by_viewer' => fn ($query) => $query->where('users.id', $viewer->id)])
             ->when($category, fn ($query, string $category) => $query->where('category', $category))
             ->when($mine, fn ($query) => $query->where('user_id', $viewer->id))
             ->latest()
             ->latest('id')
             ->paginate(10)
-            ->withQueryString()
-            ->through(fn (CommunityPost $post): array => $post->toFeedItem($viewer));
+            ->withQueryString();
+
+        $summaries = CommunityPost::reactionSummaries($posts->pluck('id'), $viewer);
+        $posts->through(fn (CommunityPost $post): array => $post->toFeedItem($viewer, $summaries[$post->id] ?? []));
 
         return Inertia::render('pond/community', [
             'posts' => $posts,
@@ -84,11 +84,34 @@ class CommunityController extends Controller
     }
 
     /**
-     * Celebrate a post, or take the celebration back.
+     * One post on its own, which is where a shared link leads.
      */
-    public function celebrate(Request $request, CommunityPost $post): RedirectResponse
+    public function show(Request $request, CommunityPost $post): Response
     {
-        $post->celebrations()->toggle($request->user()->id);
+        $viewer = $request->user();
+        $post->load(['author', 'comments.author']);
+
+        return Inertia::render('pond/community-post', [
+            'post' => $post->toFeedItem($viewer, CommunityPost::reactionSummaries([$post->id], $viewer)[$post->id] ?? []),
+        ]);
+    }
+
+    /**
+     * React to a post. Choosing the reaction you already gave takes it back; choosing another changes it.
+     */
+    public function react(Request $request, CommunityPost $post): RedirectResponse
+    {
+        $reaction = $request->validate([
+            'reaction' => ['required', Rule::in(CommunityPost::REACTIONS)],
+        ])['reaction'];
+
+        $current = $post->reactions()->whereKey($request->user()->id)->first()?->pivot->reaction;
+
+        if ($current === $reaction) {
+            $post->reactions()->detach($request->user()->id);
+        } else {
+            $post->reactions()->syncWithoutDetaching([$request->user()->id => ['reaction' => $reaction]]);
+        }
 
         return back();
     }

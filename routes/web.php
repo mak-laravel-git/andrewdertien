@@ -74,8 +74,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('community')->name('community.')->controller(CommunityController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('posts', 'store')->name('posts.store')->middleware('throttle:20,1');
+        Route::get('posts/{post}', 'show')->name('posts.show');
         Route::delete('posts/{post}', 'destroy')->name('posts.destroy');
-        Route::post('posts/{post}/celebrate', 'celebrate')->name('posts.celebrate')->middleware('throttle:60,1');
+        Route::post('posts/{post}/react', 'react')->name('posts.react')->middleware('throttle:60,1');
         Route::post('posts/{post}/comments', 'comment')->name('posts.comment')->middleware('throttle:30,1');
     });
 

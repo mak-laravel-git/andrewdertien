@@ -9,7 +9,10 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import CommunityPostCard from '@/components/pond/community-post';
+import CommunityPostCard, {
+    MemberAvatar,
+    MemberName,
+} from '@/components/pond/community-post';
 import type { FeedPost } from '@/components/pond/community-post';
 import { categories } from '@/components/pond/data';
 import type { Recipient } from '@/components/pond/toss-ball';
@@ -296,14 +299,12 @@ export default function Community({ posts: feed, filters, people }: Props) {
                                 <div className="pond-side-people">
                                     {people.map((person) => (
                                         <div key={person.id}>
-                                            <Avatar
-                                                name={person.name}
-                                                hue={hueFor(person.id)}
+                                            <MemberAvatar
+                                                member={person}
                                                 size="avatar-small"
-                                                src={person.avatar_url}
                                             />
                                             <div>
-                                                <strong>{person.name}</strong>
+                                                <MemberName member={person} />
                                                 <small>
                                                     {person.ask ?? 'Say hello'}
                                                 </small>
