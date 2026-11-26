@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\PermissionEnum;
+use App\Http\Controllers\Admin\AdvertisingInquiryController as AdminAdvertisingInquiryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\PaymentSettingsController as AdminPaymentSettingsController;
@@ -213,6 +214,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->middleware('permission:'.PermissionEnum::WALLETS_INDEX->value);
             Route::post('{user}/adjust', 'adjust')->name('adjust')
                 ->middleware(['permission:'.PermissionEnum::WALLETS_ADJUST->value, 'throttle:30,1']);
+        });
+
+        // Enquiries from the "Advertise on the Pond" card on Explore: read them, reply by email, mark them handled.
+        Route::controller(AdminAdvertisingInquiryController::class)->prefix('inquiries')->name('inquiries.')->group(function () {
+            Route::get('/', 'index')->name('index')
+                ->middleware('permission:'.PermissionEnum::INQUIRIES_INDEX->value);
+            Route::patch('{inquiry}', 'update')->name('update')
+                ->middleware(['permission:'.PermissionEnum::INQUIRIES_MANAGE->value, 'throttle:60,1']);
         });
 
         // Stripe connection: keys, on/off and a connection check.

@@ -46,6 +46,8 @@ enum PermissionEnum: string
     case WITHDRAWALS_PROCESS = 'withdrawals.process';
     case WALLETS_INDEX = 'wallets.index';
     case WALLETS_ADJUST = 'wallets.adjust';
+    case INQUIRIES_INDEX = 'inquiries.index';
+    case INQUIRIES_MANAGE = 'inquiries.manage';
 
     // MEMBER: CHOOSING AND BUYING PONDS
     case MEMBER_PONDS_VIEW = 'member-ponds.view';
@@ -111,6 +113,9 @@ enum PermissionEnum: string
             self::WITHDRAWALS_PROCESS,
             self::WALLETS_INDEX,
             self::WALLETS_ADJUST => 'Payments',
+
+            self::INQUIRIES_INDEX,
+            self::INQUIRIES_MANAGE => 'Enquiries',
 
             self::MEMBER_PONDS_VIEW,
             self::MEMBER_PONDS_PURCHASE,

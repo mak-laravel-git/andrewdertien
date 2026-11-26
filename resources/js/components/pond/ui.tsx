@@ -1,7 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { ArrowRight, Bell, Compass, CreditCard, Gem, Globe, Heart, HandCoins, LayoutDashboard, LogIn, KeyRound, LogOut, Menu, MessageCircle, Search, Settings, Sparkles, UserRound, Users, Wallet, Waves, X } from 'lucide-react';
+import { ArrowRight, Bell, Compass, CreditCard, Gem, Globe, Heart, HandCoins, Inbox, LayoutDashboard, LogIn, KeyRound, LogOut, Menu, MessageCircle, Search, Settings, Sparkles, UserRound, Users, Wallet, Waves, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { PaymentModeBadge } from '@/components/pond/payment-mode';
@@ -32,6 +32,7 @@ const adminLinks: ShellLink[] = [
     { label: 'Purchases & payments', href: '/admin/payments', icon: CreditCard },
     { label: 'Withdrawals', href: '/admin/withdrawals', icon: HandCoins },
     { label: 'Wallets', href: '/admin/wallets', icon: Wallet },
+    { label: 'Enquiries', href: '/admin/inquiries', icon: Inbox },
     { label: 'Payment settings', href: '/admin/settings/stripe', icon: KeyRound },
     { label: 'Members', href: '/admin/users', icon: Users },
 ];
